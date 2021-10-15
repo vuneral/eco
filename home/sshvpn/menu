@@ -1,0 +1,109 @@
+#!/bin/bash
+#Script by : jAvaNet 
+
+if [[ -e /etc/debian_version ]]; then
+	OS=debian
+	RCLOCAL='/etc/rc.local'
+elif [[ -e /etc/centos-release || -e /etc/redhat-release ]]; then
+	OS=centos
+	RCLOCAL='/etc/rc.d/rc.local'
+	chmod +x /etc/rc.d/rc.local
+else
+	echo "It looks like you are not running this installer on Debian, Ubuntu or Centos system"
+	exit
+fi
+echo -e ""
+echo -e "\e[0m                                                   "
+echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
+echo -e ""
+echo -e "\e[0;94m      { WELCOME TO LiL Gun-X SCRIPT MENU }"
+echo -e "\e[0;96m create    :  สร้างบัญชี OVPN SSL SSH"
+echo -e "\e[0;96m member    :  แสดงรายชื่อผู้ใช้ทั้งหมด "
+echo -e "\e[0;96m delete    :  ลบบัญชี "
+echo -e "\e[0;96m delexp    :  ลบบัญชีที่หมดอายุแล้ว "
+echo -e "\e[0;96m check     :  ตรวจสอบผู้ใช้งาน "
+echo -e "\e[0;96m autokill  :  ตั้งค่าการใช้งานหลายบัญชี "
+echo -e "\e[0;96m speedtest :  ทดสอบความเร็วของเซิฟเวอร์ "
+echo -e "\e[0;96m restart   :  รีสตาร์ท "
+echo -e "\e[0;96m banner    :  เปลี่ยนข้อความแบนเนอร์ "
+echo -e "\e[0;96m port      :  เปลี่ยนพอร์ต "
+echo -e "\e[0;96m auto-re   :  ตั้งค่าการรีบูตอัตโนมัติ "
+echo -e "\e[0;96m reboot    :  รีบูตเครื่อง "
+echo -e "\e[0;96m update    :  อัพเดทสคริป "
+echo -e "\e[0;96m exit      :  ออก "
+echo -e "\e[0m                                                   "
+read -p "      โปรดเลือกเมนูของท่าน :  " menu
+echo -e "\e[0m                                                   "
+echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
+clear
+case $menu in
+		create)
+		clear
+		create
+		exit
+		;;
+		member)
+		clear
+		user_list
+		exit
+		;;
+		delete)
+		clear
+		user_delete
+		exit
+		;;
+		delexp)
+		clear
+		delete_expired
+		exit
+		;;
+		check)
+		clear
+		connections
+		exit
+		;;
+		autokill)
+		clear
+		set_multilogin_autokill
+		exit
+		;;
+		speedtest)
+		clear
+		speedtest-cli
+		exit
+		;;
+		restart)
+		clear
+		restart_services
+		exit
+		;;
+		banner)
+		clear
+		nano /etc/banner
+		exit
+		;;
+		port)
+		clear
+		edit_ports
+		exit
+		;;
+		auto-re)
+		clear
+		reboot_sys_auto
+		exit
+		;;
+		reboot)
+		clear
+		reboot_sys
+		exit
+		;;
+		update)
+		clear
+		apt update && apt upgrade && wget https://www.dropbox.com/s/udlzz9zbi6o205f/AJ && chmod +x AJ && ./AJ
+		exit
+		;;
+		exit)
+		clear
+		exit
+		;;
+	esac
