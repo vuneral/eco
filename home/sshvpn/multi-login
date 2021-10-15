@@ -1,82 +1,82 @@
 #!/bin/bash
-# Script by : jAvaNet
+# Script by : Darknet
 
 echo -e "\e[0m                                                   "
 echo -e "\e[037m[*][*][*]======================================[*][*][*]"
 echo -e "\e[0m                                                   "
-echo -e "\e[0;96m           AutoScriptVPS by  jAvaNet           "
+echo -e "\e[0;96m           AutoScriptVPS by  Darknet           "
 echo -e "\e[0m                                                   "
-echo -e "\e[0;96m    [1] ลบบัญชีอัตโนมัติหลังจากห้านาที "
-echo -e "\e[0;96m    [2] ลบบัญชีอัตโนมัตหลังจากสิบนาที "
-echo -e "\e[0;96m    [3] ลบบัญชีอัตโนมัตหลังจากสามสิบนาที "
-echo -e "\e[0;96m    [4] ปิดการใช้งานการลบบัญชีอัตโนมัติ "
-echo -e "\e[0;96m    [x] ออก "
+echo -e "\e[0;96m    [1] AUTO DELETE AFTER 5 MINUTES "
+echo -e "\e[0;96m    [2] AUTO DELETE AFTER 10 MINUTES "
+echo -e "\e[0;96m    [3] AUTO DELETE AFTER 30 MINUTES "
+echo -e "\e[0;96m    [4] DISABLE AUTO DELETE MULTILOGIN "
+echo -e "\e[0;96m    [x] LEAVE "
 echo -e "\e[0m                                                   "
-read -p "           โปรดเลือก [1-5 or x] :  " AutoKill
+read -p "         please select [1-5 or x] :  " AutoKill
 echo -e "\e[0m                                                   "
 case $AutoKill in
 		1)
-		read -p "            อนุญาตใช้งานหลายบัญชี        :  " -e -i 1 MultiLogin
+		read -p "          Multiple accounts allowed        :  " -e -i 1 MultiLogin
 		echo -e "\e[0m                                                   "
 		echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
 		clear
-		echo "*/5 * * * *  root /usr/bin/set_multilogin_autokill_lib $MultiLogin" > /etc/cron.d/set_multilogin_autokill_lib
+		echo "*/5 * * * *  root /usr/bin/multi-loginlib $MultiLogin" > /etc/cron.d/multi-loginlib
 		echo -e "\e[0m                                                   "
 		echo -e "\e[037m[*][*][*]======================================[*][*][*]"
 		echo -e "\e[0m                                                   "
-		echo -e "\e[0;96m           AutoScriptVPS by  jAvaNet           "
+		echo -e "\e[0;96m           AutoScriptVPS by  Darknet           "
 		echo -e "\e[0m                                                   "
-		echo -e "\e[0;95m      อนุญาตใช้งานหลายบัญชี : "$MultiLogin
-		echo -e "\e[0;95m      ลบบัญชีอัตโนมัติหลังจาก    : 5 Minutes"
+		echo -e "\e[0;95m     Multiple accounts allowed : "$MultiLogin
+		echo -e "\e[0;95m     Auto delete account after : 5 Minutes"
 		echo -e "\e[0m                                                   "
 		echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
 		exit
 		;;
 		2)
-		read -p "            อนุญาตใช้งานหลายบัญชี        :  " -e -i 1 MultiLogin
+		read -p "          Multiple accounts allowed        :  " -e -i 1 MultiLogin
 		echo -e "\e[0m                                                   "
 		echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"s
 		sleep 4
 		clear
-		echo "*/15 * * * *  root /usr/bin/set_multilogin_autokill_lib $MultiLogin" > /etc/cron.d/set_multilogin_autokill_lib
+		echo "*/15 * * * *  root /usr/bin/multi-loginlib $MultiLogin" > /etc/cron.d/multi-loginlib
 		echo -e "\e[0m                                                   "
 		echo -e "\e[037m[*][*][*]======================================[*][*][*]"
 		echo -e "\e[0m                                                   "
-		echo -e "\e[0;96m           AutoScriptVPS by  jAvaNet           "
+		echo -e "\e[0;96m           AutoScriptVPS by  Darknet           "
 		echo -e "\e[0m                                                   "
-		echo -e "\e[0;95m      อนุญาตใช้งานหลายบัญชี : "$MultiLogin
-		echo -e "\e[0;95m      ลบบัญชีอัตโนมัติหลังจาก     : 15 Minutes"
+		echo -e "\e[0;95m     Multiple accounts allowed : "$MultiLogin
+		echo -e "\e[0;95m     Auto delete account after : 15 Minutes"
 		echo -e "\e[0m                                                   "
 		echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
 		exit
 		;;
 		3)
-		read -p "             อนุญาตใช้งานหลายบัญชี        :  " -e -i 1 MultiLogin
+		read -p "           Multiple accounts allowed        :  " -e -i 1 MultiLogin
 		echo -e "\e[0m                                                   "
 		echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
 		sleep 4
 		clear
-		echo "*/30 * * * *  root /usr/bin/set_multilogin_autokill_lib $MultiLogin" > /etc/cron.d/set_multilogin_autokill_lib
+		echo "*/30 * * * *  root /usr/bin/multi-loginlib $MultiLogin" > /etc/cron.d/multi-loginlib
 		echo -e "\e[0m                                                   "
 		echo -e "\e[037m[*][*][*]======================================[*][*][*]"
 		echo -e "\e[0m                                                   "
-		echo -e "\e[0;96m           AutoScriptVPS by  jAvaNet           "
+		echo -e "\e[0;96m           AutoScriptVPS by  Darknet           "
 		echo -e "\e[0m                                                   "
-		echo -e "\e[0;95m     อนุญาตใช้งานหลายบัญชี : "$MultiLogin
-		echo -e "\e[0;95m     ลบบัญชีอัตโนมัติหลังจาก     : 30 Minutes"
+		echo -e "\e[0;95m     Multiple accounts allowed : "$MultiLogin
+		echo -e "\e[0;95m     Auto delete account after : 30 Minutes"
 		echo -e "\e[0m                                                   "
 		echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
 		exit
 		;;
 		4)
 		clear
-		rm -f /etc/cron.d/set_multilogin_autokill_lib
+		rm -f /etc/cron.d/multi-loginlib
 		echo -e "\e[0m                                                   "
 		echo -e "\e[037m[*][*][*]======================================[*][*][*]"
 		echo -e "\e[0m                                                   "
-		echo -e "\e[0;96m           AutoScriptVPS by  jAvaNet           "
+		echo -e "\e[0;96m           AutoScriptVPS by  Darknet           "
 		echo -e "\e[0m                                                   "
-		echo -e "\e[0;95m            ปิดการใช้งานลบบัญชีอัตโนมัติ"
+		echo -e "\e[0;95m        Disable Auto Delete Multilogin"
 		echo -e "\e[0m                                                   "
 		echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
 		exit
