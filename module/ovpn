@@ -1,0 +1,75 @@
+# OpenVPN Ports
+OpenVPN_TCP_Port='4463'
+OpenVPN_UDP_Port='4463'
+
+# Squid Ports
+Squid_Port1='8181'
+Squid_Port2='8000'
+
+# initializing var
+export DEBIAN_FRONTEND=noninteractive
+local IP="$( ip addr | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -Ev "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\." | head -n 1 )"
+[ -z "${IP}" ] && IP="$(curl -4s ipv4.icanhazip.com)"
+[ -z "${IP}" ] && IP="$(curl -4s ipinfo.io/ip)"
+[ ! -z "${IP}" ] && echo "${IP}" || echo 'ipaddress'
+
+cat <<EOF15> /var/www/darknet/client-tcp.ovpn
+client
+dev tun
+proto tcp
+remote $ipaddress $OpenVPN_TCP_Port
+remote-cert-tls server
+resolv-retry infinite
+connect-retry infinite
+nobind
+tun-mtu 1500
+mssfix 1460
+persist-key
+persist-tun
+auth-user-pass
+auth none
+auth-nocache
+cipher none
+keysize 0
+comp-lzo
+setenv CLIENT_CERT 0
+reneg-sec 0
+verb 3
+http-proxy $ipaddress $Squid_Port1
+http-proxy-option VERSION 1.1
+http-proxy-option CUSTOM-HEADER Host www.googleapis.com
+http-proxy-option CUSTOM-HEADER X-Forwarded-For www.googleapis.com
+<ca>
+$(cat /etc/openvpn/ca.crt)
+</ca>
+EOF15
+
+cat <<EOF162> /var/www/darknet/client-udp.ovpn
+client
+dev tun
+proto udp
+remote $ipaddress $OpenVPN_UDP_Port
+remote-cert-tls server
+resolv-retry infinite
+float
+fast-io
+nobind
+tun-mtu 1500
+mssfix 1460
+persist-key
+persist-remote-ip
+persist-tun
+auth-user-pass
+auth none
+auth-nocache
+cipher none
+keysize 0
+comp-lzo
+setenv CLIENT_CERT 0
+reneg-sec 0
+verb 3
+<ca>
+$(cat /etc/openvpn/ca.crt)
+</ca>
+EOF162
+
