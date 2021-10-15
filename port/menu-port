@@ -1,21 +1,21 @@
 #!/bin/bash
-# Script by : jAvaNet 
+# Script by : Darknet 
 
 
 echo -e "\e[0m                                                   "
 echo -e "\e[037m[*][*][*]======================================[*][*][*]"
 echo -e "\e[0m                                                   "
-echo -e "\e[0;96m           AutoScriptVPS by  jAvaNet            "
+echo -e "\e[0;96m           AutoScriptVPS by  Darknet            "
 echo -e "\e[0m                                                   "
-echo -e "\e[0;96m            [1] แสดงพอร์ตทั้งหมด"
-echo -e "\e[0;96m            [2] แก้ไขพอร์ต OpenSSH"
-echo -e "\e[0;96m            [3] แก้ไขพอร์ต Dropbear"
-echo -e "\e[0;96m            [4] แก้ไขพอร์ต Stunnel"
-echo -e "\e[0;96m            [5] แก้ไขพอร์ต OpenVPN"
-echo -e "\e[0;96m            [6] แก้ไขพอร์ต Squid"
-echo -e "\e[0;96m            [x] ออก"
+echo -e "\e[0;96m            [1] SHOW ALL PORT"
+echo -e "\e[0;96m            [2] EDIT PORT OPENSSH"
+echo -e "\e[0;96m            [3] EDIT PORT DROPBEAR"
+echo -e "\e[0;96m            [4] EDIT PORT STUNNEL"
+echo -e "\e[0;96m            [5] EDIT PORT OPENVPN"
+echo -e "\e[0;96m            [6] EDIT PORT SQUID"
+echo -e "\e[0;96m            [x] LEAVE"
 echo -e "\e[0m                                                   "
-read -p "            โปรดเลือกจาก  [1-6 or x] :  " Port
+read -p "           please choose from  [1-6 or x] :  " Port
 echo -e "\e[0m                                                   "
 echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
 clear
@@ -27,27 +27,27 @@ case $Port in
 			;;
 			2)
 			clear
-			edit_openssh
+			port-ssh
 			exit
 			;;
 			3)
 			clear
-			edit_dropbear
+			port-dropbear
 			exit
 			;;
 			4)
 			clear
-			edit_stunnel4
+			port-stunnel
 			exit
 			;;
 			5)
 			clear
-			edit_openvpn
+			port-ovpn
 			exit
 			;;
 			6)
 			clear
-			edit_squid3
+			port-squid
 			exit
 			;;
 			x)
