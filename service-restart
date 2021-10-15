@@ -1,0 +1,124 @@
+#!/bin/bash
+# Script by : jAvaNet 
+
+
+echo -e "\e[0m                                                   "
+echo -e "\e[037m[*][*][*]======================================[*][*][*]"
+echo -e "\e[0m                                                   "
+echo -e "\e[0;96m           AutoScriptVPS by  jAvaNet            "
+echo -e "\e[0m                                                   "
+echo -e "\e[0;96m            [1] รีสตาร์ทระบบทั้งหมด "
+echo -e "\e[0;96m            [2] รีสตาร์ท OpenSSH "
+echo -e "\e[0;96m            [3] รีสตาร์ท Dropbear "
+echo -e "\e[0;96m            [4] รีสตาร์ท Stunnel4 "
+echo -e "\e[0;96m            [5] รีสตาร์ท OpenVPN "
+echo -e "\e[0;96m            [6] รีสตาร์ท Squid "
+echo -e "\e[0;96m            [7] รีสตาร์ท Nginx "
+echo -e "\e[0;96m            [x] ออก  "
+echo -e "\e[0m                                                   "
+read -p "              โปรดเลือก  [1-7 or x] :  " Restart
+echo -e "\e[0m                                                   "
+echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
+clear
+case $Restart in
+		1)
+		clear
+		service ssh restart
+		service dropbear restart
+		service stunnel4 restart
+		service openvpn restart
+		service squid restart
+		service nginx restart
+		echo -e "\e[0m                                                   "
+		echo -e "\e[037m[*][*][*]======================================[*][*][*]"
+		echo -e "\e[0m                                                   "
+		echo -e "\e[0;96m           AutoScriptVPS by  jAvaNet            "
+		echo -e "\e[0m                                                   "
+		echo -e "\e[0;95m             Services Restarted               "
+		echo -e "\e[0m                                                   "
+		echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
+		exit
+		;;
+		2)
+		clear
+		service ssh restart
+		echo -e "\e[0m                                                   "
+		echo -e "\e[037m[*][*][*]======================================[*][*][*]"
+		echo -e "\e[0m                                                   "
+		echo -e "\e[0;96m           AutoScriptVPS by  jAvaNet            "
+		echo -e "\e[0m                                                   "
+		echo -e "\e[0;95m            SSH Service Restarted               "
+		echo -e "\e[0m                                                   "
+		echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
+		exit
+		;;
+		3)
+		clear
+		service dropbear restart
+		echo -e "\e[0m                                                   "
+		echo -e "\e[037m[*][*][*]======================================[*][*][*]"
+		echo -e "\e[0m                                                   "
+		echo -e "\e[0;32m           AutoScriptVPS by  jAvaNet            "
+		echo -e "\e[0m                                                   "
+		echo -e "\e[0;95m           Dropbear Service Restarted            "
+		echo -e "\e[0m                                                   "
+		echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
+		exit
+		;;
+		4)
+		clear
+		service stunnel4 restart
+		echo -e "\e[0m                                                   "
+		echo -e "\e[037m[*][*][*]======================================[*][*][*]"
+		echo -e "\e[0m                                                   "
+		echo -e "\e[0;96m           AutoScriptVPS by  jAvaNet            "
+		echo -e "\e[0m                                                   "
+		echo -e "\e[0;95m           Stunnel4 Service Restarted            "
+		echo -e "\e[0m                                                   "
+		echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
+		exit
+		;;
+		5)
+		clear
+		service openvpn restart
+		echo -e "\e[0m                                                   "
+		echo -e "\e[037m[*][*][*]======================================[*][*][*]"
+		echo -e "\e[0m                                                   "
+		echo -e "\e[0;96m           AutoScriptVPS by  jAvaNet            "
+		echo -e "\e[0m                                                   "
+		echo -e "\e[0;95m           OpenVPN Service Restarted             "
+		echo -e "\e[0m                                                   "
+		echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
+		exit
+		;;
+		6)
+		clear
+		service squid restart
+		echo -e "\e[0m                                                   "
+		echo -e "\e[037m[*][*][*]======================================[*][*][*]"
+		echo -e "\e[0m                                                   "
+		echo -e "\e[0;95m           AutoScriptVPS by  jAvaNet            "
+		echo -e "\e[0m                                                   "
+		echo -e "\e[0;95m           Squid3 Service Restarted             "
+		echo -e "\e[0m                                                   "
+		echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
+		exit
+		;;
+		7)
+		clear
+		service nginx restart
+		echo -e "\e[0m                                                   "
+		echo -e "\e[037m[*][*][*]======================================[*][*][*]"
+		echo -e "\e[0m                                                   "
+		echo -e "\e[0;96m           AutoScriptVPS by  jAvaNet            "
+		echo -e "\e[0m                                                   "
+		echo -e "\e[0;95m           Nginx Service Restarted              "
+		echo -e "\e[0m                                                   "
+		echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
+		exit
+		;;
+		x)
+		clear
+		exit
+		;;
+	esac
