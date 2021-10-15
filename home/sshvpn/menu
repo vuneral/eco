@@ -1,5 +1,5 @@
 #!/bin/bash
-#Script by : jAvaNet 
+#Script by : darknet
 
 if [[ -e /etc/debian_version ]]; then
 	OS=debian
@@ -16,23 +16,17 @@ echo -e ""
 echo -e "\e[0m                                                   "
 echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
 echo -e ""
-echo -e "\e[0;94m      { WELCOME TO LiL Gun-X SCRIPT MENU }"
-echo -e "\e[0;96m create    :  สร้างบัญชี OVPN SSL SSH"
-echo -e "\e[0;96m member    :  แสดงรายชื่อผู้ใช้ทั้งหมด "
-echo -e "\e[0;96m delete    :  ลบบัญชี "
-echo -e "\e[0;96m delexp    :  ลบบัญชีที่หมดอายุแล้ว "
-echo -e "\e[0;96m check     :  ตรวจสอบผู้ใช้งาน "
-echo -e "\e[0;96m autokill  :  ตั้งค่าการใช้งานหลายบัญชี "
-echo -e "\e[0;96m speedtest :  ทดสอบความเร็วของเซิฟเวอร์ "
-echo -e "\e[0;96m restart   :  รีสตาร์ท "
-echo -e "\e[0;96m banner    :  เปลี่ยนข้อความแบนเนอร์ "
-echo -e "\e[0;96m port      :  เปลี่ยนพอร์ต "
-echo -e "\e[0;96m auto-re   :  ตั้งค่าการรีบูตอัตโนมัติ "
-echo -e "\e[0;96m reboot    :  รีบูตเครื่อง "
-echo -e "\e[0;96m update    :  อัพเดทสคริป "
-echo -e "\e[0;96m exit      :  ออก "
+echo -e "\e[0;94m      { WELCOME TO DARKNET SCRIPT MENU }"
+echo -e "\e[0;96m create    :  CREATE NEW USER SSH/OVPN"
+echo -e "\e[0;96m member    :  SHOW USER LIST "
+echo -e "\e[0;96m delete    :  DELETE USER "
+echo -e "\e[0;96m delexp    :  DELETE EXP USER "
+echo -e "\e[0;96m check     :  CHECK USER LOGIN "
+echo -e "\e[0;96m autokill  :  AUTOKILL MULTI LOGIN "
+echo -e "\e[0;96m banner    :  SETTING BANNER "
+echo -e "\e[0;96m exit      :  EXIT SSHMENU "
 echo -e "\e[0m                                                   "
-read -p "      โปรดเลือกเมนูของท่าน :  " menu
+read -p "      Please select your menu :  " menussh
 echo -e "\e[0m                                                   "
 echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
 clear
@@ -44,37 +38,27 @@ case $menu in
 		;;
 		member)
 		clear
-		user_list
+		list-user
 		exit
 		;;
 		delete)
 		clear
-		user_delete
+		del-user
 		exit
 		;;
 		delexp)
 		clear
-		delete_expired
+		del-exp
 		exit
 		;;
 		check)
 		clear
-		connections
+		show-login
 		exit
 		;;
 		autokill)
 		clear
-		set_multilogin_autokill
-		exit
-		;;
-		speedtest)
-		clear
-		speedtest-cli
-		exit
-		;;
-		restart)
-		clear
-		restart_services
+		multi-login
 		exit
 		;;
 		banner)
@@ -82,28 +66,8 @@ case $menu in
 		nano /etc/banner
 		exit
 		;;
-		port)
-		clear
-		edit_ports
-		exit
-		;;
-		auto-re)
-		clear
-		reboot_sys_auto
-		exit
-		;;
-		reboot)
-		clear
-		reboot_sys
-		exit
-		;;
-		update)
-		clear
-		apt update && apt upgrade && wget https://www.dropbox.com/s/udlzz9zbi6o205f/AJ && chmod +x AJ && ./AJ
-		exit
-		;;
 		exit)
 		clear
-		exit
+		menu
 		;;
 	esac
