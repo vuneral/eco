@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script by : jAvaNet
+# Script by : Darknet
 
 
 if [ -e "/var/log/auth.log" ]; then
@@ -10,7 +10,7 @@ if [ -e "/var/log/secure" ]; then
 fi
                 
 data=( `ps aux | grep -i dropbear | awk '{print $2}'`);
-echo "-----=[  ผู้ใช้งาน Dropbear ]=-----";
+echo "-----=[  User Dropbear ]=-----";
 echo "ID  |  Username  |  IP Address";
 echo "-------------------------------------";
 cat $LOG | grep -i dropbear | grep -i "Password auth succeeded" > /tmp/login-db.txt;
@@ -25,7 +25,7 @@ do
                 fi
 done
 echo " "
-echo "-----=[ ผู้ใช้งาน OpenSSH ]=-----";
+echo "-----=[ User OpenSSH ]=-----";
 echo "ID  |  Username  |  IP Address";
 echo "-------------------------------------";
 cat $LOG | grep -i sshd | grep -i "Accepted password for" > /tmp/login-db.txt
@@ -46,7 +46,7 @@ if [ -f "/etc/openvpn/openvpn-status.log" ]; then
         a=$((3+((line-8)/2)))
         b=$(((line-8)/2))
         echo " "
-        echo "-----=[ ผู้ใช้งาน OpenVPN ]=-----";
+        echo "-----=[ User OpenVPN ]=-----";
         echo "Username  |  IP Address  |  Connected Since";
         echo "-------------------------------------";
         cat /etc/openvpn/openvpn-status.log | head -n $a | tail -n $b | cut -d "," -f 1,2,5 | sed -e 's/,/   /g' > /tmp/vpn-login-db.txt
