@@ -44,36 +44,38 @@ local IP="$( ip addr | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'
 [ -z "${IP}" ] && IP="$(curl -4s ipinfo.io/ip)"
 [ ! -z "${IP}" ] && echo "${IP}" || echo 'ipaddress'
 
-apt update 2>/dev/null
-apt upgrade -y 2>/dev/null
-printf "%b\n" "\e[32m[\e[0mInfo\e[32m]\e[0m\e[97m Please wait..\e[0m"
-# install wget and curl
-apt -y install wget curl -y
-
+apt-get update
+apt-get upgrade -y
+apt dist-upgrade -y
+ 
+# Removing some firewall tools that may affect other services
+apt-get remove --purge ufw firewalld -y
 apt-get remove --purge exim4 -y
-apt autoremove --fix-missing -y > /dev/null 2>&1
-apt remove --purge apache* ufw -y > /dev/null 2>&1
+ 
+# Installing some important machine essentials
+apt-get install nano wget curl zip unzip tar gzip p7zip-full bc rc openssl cron net-tools dnsutils dos2unix screen bzip2 ccrypt -y
+ 
+# Now installing all our wanted services
+apt-get install dropbear stunnel4 privoxy ca-certificates nginx ruby apt-transport-https lsb-release squid screenfetch -y
 
-apt install nano wget curl zip unzip tar gzip p7zip-full bc rc openssl cron net-tools dnsutils dos2unix screen bzip2 ccrypt lsof -y 2>/dev/null
-
-apt remove --purge firewalld -y
-apt autoremove -y -f
+# Installing all required packages to install Webmin
+apt-get install perl libnet-ssleay-perl openssl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python dbus libxml-parser-perl -y
+apt-get install shared-mime-info jq -y
+ 
+# Installing a text colorizer
+gem install lolcat
 
 apt install iptables-persistent -y -f
-systemctl restart netfilter-persistent &>/dev/null
-systemctl enable netfilter-persistent &>/dev/null
+systemctl restart netfilter-persistent
+systemctl enable netfilter-persistent
 
-apt install tuned -y 2>/dev/null
-systemctl enable tuned &>/dev/null
-systemctl restart tuned &>/dev/null
-tuned-adm profile throughput-performance 2>/dev/null
+apt install tuned -y 
+systemctl enable tuned
+systemctl restart tuned
+tuned-adm profile throughput-performance
 
-apt install dropbear stunnel4 privoxy ca-certificates nginx ruby apt-transport-https lsb-release squid jq tcpdump dsniff grepcidr screenfetch -y 2>/dev/null
-
-apt install perl libnet-ssleay-perl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python dbus libxml-parser-perl shared-mime-info -y 2>/dev/null
-
-gem install lolcat 2>/dev/null
-apt autoremove --fix-missing -y &>/dev/null
+apt autoremove --fix-missing -y
+apt autoremove -y -f
 
 # Removing some duplicated sshd server configs
 rm -f /etc/ssh/sshd_config*
@@ -134,18 +136,12 @@ ln -fs /usr/share/zoneinfo/$MyVPS_Time /etc/localtime
 cd
 wget -O /usr/bin/badvpn-udpgw "https://github.com/GunGZN/menu-Oxv2/raw/main/badvpn-udpgw64"
 chmod +x /usr/bin/badvpn-udpgw
-sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 500' /etc/rc.local
-sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 500' /etc/rc.local
-sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 500' /etc/rc.local
+sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 4000' /etc/rc.local
+sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 4000' /etc/rc.local
+sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 4000' /etc/rc.local
 screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 500
 screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 500
 screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 500
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7400 --max-clients 500
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7500 --max-clients 500
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7600 --max-clients 500
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7700 --max-clients 500
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7800 --max-clients 500
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7900 --max-clients 500
 
 # install dropbear
 # Removing some duplicate config file
@@ -327,48 +323,10 @@ apt-get install sslh -y
 wget -O /etc/default/sslh "https://raw.githubusercontent.com/GunGZN/menu-Oxv2/main/sslh.conf"
 service sslh restart
 
-printf "%b\n" "\e[32m[\e[0mInfo\e[32m]\e[0m\e[97m running BadVPN-udpgw installation on background\e[0m"
-cat <<'badvpnEOF'> /tmp/install-badvpn.bash
-#!/bin/bash
-if [[ -e /usr/local/bin/badvpn-udpgw ]]; then
- printf "%s\n" "BadVPN-udpgw already installed"
- exit 1
-else
- curl -4skL "https://github.com/ambrop72/badvpn/archive/4b7070d8973f99e7cfe65e27a808b3963e25efc3.zip" -o /tmp/badvpn.zip
- unzip -qq /tmp/badvpn.zip -d /tmp && rm -f /tmp/badvpn.zip
- cd /tmp/badvpn-4b7070d8973f99e7cfe65e27a808b3963e25efc3
- cmake -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1 &> /dev/null
- make install &> /dev/null
- rm -rf /tmp/badvpn-4b7070d8973f99e7cfe65e27a808b3963e25efc3
- cat <<'EOFudpgw' > /lib/systemd/system/badvpn-udpgw.service
-[Unit]
-Description=BadVPN UDP Gateway Server daemon
-Wants=network.target
-After=network.target
-[Service]
-ExecStart=/usr/local/bin/badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 4000 --max-connections-for-client 4000 --loglevel info
-Restart=always
-RestartSec=3
-[Install]
-WantedBy=multi-user.target
-EOFudpgw
-systemctl daemon-reload &>/dev/null
-systemctl restart badvpn-udpgw.service &>/dev/null
-systemctl enable badvpn-udpgw.service &>/dev/null
-fi
-badvpnEOF
-screen -S badvpninstall -dm bash -c "bash /tmp/install-badvpn.bash && rm -f /tmp/install-badvpn.bash"
-}
-
 # install fail2ban
 apt -y install fail2ban
 
-## Running FFSend installation in background
-rm -rf {/usr/bin/ffsend,/usr/local/bin/ffsend}
-printf "%b\n" "\e[32m[\e[0mInfo\e[32m]\e[0m\e[97m running FFSend installation on background\e[0m"
-screen -S ffsendinstall -dm bash -c "curl -4skL "https://github.com/timvisee/ffsend/releases/download/v0.2.65/ffsend-v0.2.65-linux-x64-static" -o /usr/bin/ffsend && chmod a+x /usr/bin/ffsend"
-hostnamectl set-hostname localhost &> /dev/null
-printf "%b\n" "\e[32m[\e[0mInfo\e[32m]\e[0m\e[97m running DDoS-deflate installation on background\e[0m"
+# Instal DDOS Flate
 if [ -d '/usr/local/ddos' ]; then
 	echo; echo; echo "Please un-install the previous version first"
 	exit 0
@@ -395,10 +353,6 @@ echo; echo 'Installation has completed.'
 echo 'Config file is at /usr/local/ddos/ddos.conf'
 echo 'Please send in your comments and/or suggestions to zaf@vsnl.com'
 
-# banner /etc/issue.net
-echo "Banner /etc/issue.net" >>/etc/ssh/sshd_config
-sed -i 's@DROPBEAR_BANNER=""@DROPBEAR_BANNER="/etc/issue.net"@g' /etc/default/dropbear
-
 # blockir torrent
 iptables -A FORWARD -m string --string "get_peers" --algo bm -j DROP
 iptables -A FORWARD -m string --string "announce_peer" --algo bm -j DROP
@@ -420,11 +374,29 @@ netfilter-persistent reload
 useradd -m Admin
 echo "Admin:1234" | chpasswd
 
+screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 4000
+screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 4000
+screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 4000
+
+echo "12 0 * * * root clear-log && reboot" >> /etc/crontab
+echo "0 0 * * * root xp" >> /etc/crontab
+# remove unnecessary files
+cd
+apt autoclean -y
+apt -y remove --purge unscd
+apt-get -y --purge remove samba*;
+apt-get -y --purge remove apache2*;
+apt-get -y --purge remove bind9*;
+apt-get -y remove sendmail*
+apt autoremove -y
+# finishing
+cd
+
 # Showing additional information from installating this script
 echo " "
 echo "Installation Local Protocol Completed!!"
 echo -e "\033[1;31m═══════════════════════════════════\033[0m"
-echo "      Premium Script SshVpn                               "
+echo "      Premium Script Local Vpn                               "
 echo "        -Darknet-                                     "
 echo -e "\033[1;31m═══════════════════════════════════\033[0m"
 history -c
