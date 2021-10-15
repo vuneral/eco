@@ -2,10 +2,6 @@
 # Script by Darknet
 # Premium SSH / OVPN
 
-#############################
-#############################
-# Variables (Can be changed depends on your preferred values)
-# Script name
 MyScriptName='Darknet'
 
 # OpenSSH Ports
@@ -117,7 +113,7 @@ sed -i "s|myPORT2|$SSH_Port2|g" /etc/ssh/sshd_config
  dos2unix -q /etc/banner
 
 # simple password minimal
-wget -O /etc/pam.d/common-password "https://raw.githubusercontent.com/Bankzza555666/script/main/password"
+wget -O /etc/pam.d/common-password "https://raw.githubusercontent.com/vuneral/eco/main/password"
 chmod +x /etc/pam.d/common-password
 
 # Some command to identify null shells when you tunnel through SSH or using Stunnel.
@@ -134,7 +130,7 @@ ln -fs /usr/share/zoneinfo/$MyVPS_Time /etc/localtime
 
 # install badvpn
 cd
-wget -O /usr/bin/badvpn-udpgw "https://github.com/GunGZN/menu-Oxv2/raw/main/badvpn-udpgw64"
+wget -O /usr/bin/badvpn-udpgw "https://github.com/vuneral/eco/raw/main/module/badvpn-udpgw64"
 chmod +x /usr/bin/badvpn-udpgw
 sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 4000' /etc/rc.local
 sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 4000' /etc/rc.local
@@ -168,15 +164,18 @@ sed -i "s|PORT02|$Dropbear_Port2|g" /etc/default/dropbear
 systemctl restart dropbear
 
 cd
-apt remove --purge squid -y -f 2>/dev/null
+apt remove --purge squid -y -f
 wget "http://security.debian.org/debian-security/pool/updates/main/s/squid3/squid_3.5.23-5+deb9u5_amd64.deb" -qO squid.deb
 dpkg -i squid.deb
 rm -f squid.deb
 
-apt install libecap3 squid-common squid-langpack -y -f 2>/dev/null
+apt install libecap3 squid-common squid-langpack -y -f
 wget "http://security.debian.org/debian-security/pool/updates/main/s/squid3/squid_3.5.23-5+deb9u5_amd64.deb" -qO squid.deb
 dpkg -i squid.deb
 rm -f squid.deb
+ 
+# Removing Duplicate Squid config
+rm -rf /etc/squid/squid.con*
  
 # Creating Squid server config using cat eof tricks
 cat <<'mySquid' > /etc/squid/squid.conf
@@ -184,70 +183,8 @@ cat <<'mySquid' > /etc/squid/squid.conf
 acl VPN dst IP-ADDRESS/32
 http_access allow VPN
 http_access deny all 
-http_port Squid_Port1
-http_port Squid_Port2
-http_port Squid_Port3
-### Allow Headers
-request_header_access Allow allow all 
-request_header_access Authorization allow all 
-request_header_access WWW-Authenticate allow all 
-request_header_access Proxy-Authorization allow all 
-request_header_access Proxy-Authenticate allow all 
-request_header_access Cache-Control allow all 
-request_header_access Content-Encoding allow all 
-request_header_access Content-Length allow all 
-request_header_access Content-Type allow all 
-request_header_access Date allow all 
-request_header_access Expires allow all 
-request_header_access Host allow all 
-request_header_access If-Modified-Since allow all 
-request_header_access Last-Modified allow all 
-request_header_access Location allow all 
-request_header_access Pragma allow all 
-request_header_access Accept allow all 
-request_header_access Accept-Charset allow all 
-request_header_access Accept-Encoding allow all 
-request_header_access Accept-Language allow all 
-request_header_access Content-Language allow all 
-request_header_access Mime-Version allow all 
-request_header_access Retry-After allow all 
-request_header_access Title allow all 
-request_header_access Connection allow all 
-request_header_access Proxy-Connection allow all 
-request_header_access User-Agent allow all 
-request_header_access Cookie allow all 
-request_header_access All deny all
-### HTTP Anonymizer Paranoid
-reply_header_access Allow allow all 
-reply_header_access Authorization allow all 
-reply_header_access WWW-Authenticate allow all 
-reply_header_access Proxy-Authorization allow all 
-reply_header_access Proxy-Authenticate allow all 
-reply_header_access Cache-Control allow all 
-reply_header_access Content-Encoding allow all 
-reply_header_access Content-Length allow all 
-reply_header_access Content-Type allow all 
-reply_header_access Date allow all 
-reply_header_access Expires allow all 
-reply_header_access Host allow all 
-reply_header_access If-Modified-Since allow all 
-reply_header_access Last-Modified allow all 
-reply_header_access Location allow all 
-reply_header_access Pragma allow all 
-reply_header_access Accept allow all 
-reply_header_access Accept-Charset allow all 
-reply_header_access Accept-Encoding allow all 
-reply_header_access Accept-Language allow all 
-reply_header_access Content-Language allow all 
-reply_header_access Mime-Version allow all 
-reply_header_access Retry-After allow all 
-reply_header_access Title allow all 
-reply_header_access Connection allow all 
-reply_header_access Proxy-Connection allow all 
-reply_header_access User-Agent allow all 
-reply_header_access Cookie allow all 
-reply_header_access All deny all
-### CoreDump
+http_port 0.0.0.0:Squid_Port1
+http_port 0.0.0.0:Squid_Port2
 coredump_dir /var/spool/squid
 dns_nameservers 8.8.8.8 8.8.4.4
 refresh_pattern ^ftp: 1440 20% 10080
@@ -258,7 +195,7 @@ visible_hostname Darknet
 mySquid
 
 # Setting machine's IP Address inside of our Squid config(security that only allows this machine to use this proxy server)
-sed -i "s|IP-ADDRESS|$IPADDR|g" /etc/squid/squid.conf
+sed -i "s|IP-ADDRESS|$ipaddress|g" /etc/squid/squid.conf
  
 # Setting squid ports
 sed -i "s|Squid_Port1|$Squid_Port1|g" /etc/squid/squid.conf
@@ -267,6 +204,28 @@ sed -i "s|Squid_Port2|$Squid_Port2|g" /etc/squid/squid.conf
 # Starting Proxy server
 echo -e "Restarting proxy server..."
 systemctl restart squid
+
+# Creating nginx config for our ovpn config downloads webserver
+cat <<'myNginxC' > /etc/nginx/conf.d/darknet-file.conf
+# My File Config Download Directory
+server {
+ listen 0.0.0.0:myNginx;
+ server_name localhost;
+ root /var/www/darknet;
+ index index.html;
+}
+myNginxC
+
+# Setting our nginx config port for .ovpn download site
+sed -i "s|myNginx|$OvpnDownload_Port|g" /etc/nginx/conf.d/darknet-file.conf
+
+# Removing Default nginx page(port 80)
+rm -rf /etc/nginx/sites-*
+
+# Creating our root directory for all of our file configs
+rm -rf /var/www/openvpn
+rm -rf /var/www/darknet
+mkdir -p /var/www/darknet
 
 # setting vnstat
 apt -y install vnstat
@@ -285,34 +244,51 @@ systemctl enable vnstat
 rm -f /root/vnstat-2.6.tar.gz
 rm -rf /root/vnstat-2.6
 
-# install stunnel
-apt install stunnel4 -y
-cat > /etc/stunnel/stunnel.conf <<-END
+StunnelDir=$(ls /etc/default | grep stunnel | head -n1)
+
+# Creating stunnel startup config using cat eof tricks
+cat <<'MyStunnelD' > /etc/default/$StunnelDir
+# My Stunnel Config
+ENABLED=1
+FILES="/etc/stunnel/*.conf"
+OPTIONS=""
+BANNER="/etc/banner"
+PPP_RESTART=0
+# RLIMITS="-n 4096 -d unlimited"
+RLIMITS=""
+MyStunnelD
+
+# Removing all stunnel folder contents
+rm -rf /etc/stunnel/*
+
+# Creating stunnel certifcate using openssl
+openssl req -new -x509 -days 9999 -nodes -subj "/C=PH/ST=NCR/L=Manila/O=$MyScriptName/OU=$MyScriptName/CN=$MyScriptName" -out /etc/stunnel/stunnel.pem -keyout /etc/stunnel/stunnel.pem &> /dev/null
+
+# Creating stunnel server config
+cat <<'MyStunnelC' > /etc/stunnel/stunnel.conf
+# My Stunnel Config
+pid = /var/run/stunnel.pid
 cert = /etc/stunnel/stunnel.pem
 client = no
-socket = a:SO_REUSEADDR=1
 socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
+TIMEOUTclose = 0
 [dropbear]
-accept = 444
-connect = 127.0.0.1:109
-[dropbear]
-accept = 777
-connect = 127.0.0.1:22
-[openvpn]
-accept = 442
-connect = 127.0.0.1:1194
-END
+accept = Stunnel_Port1
+connect = 127.0.0.1:dropbear_port_c
+[openssh]
+accept = Stunnel_Port2
+connect = 127.0.0.1:openssh_port_c
+MyStunnelC
 
-# make a certificate
-openssl genrsa -out key.pem 2048
-openssl req -new -x509 -key key.pem -out cert.pem -days 1095 \
--subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit/CN=$commonname/emailAddress=$email"
-cat key.pem cert.pem >> /etc/stunnel/stunnel.pem
+# setting stunnel ports
+sed -i "s|Stunnel_Port1|$Stunnel_Port1|g" /etc/stunnel/stunnel.conf
+sed -i "s|dropbear_port_c|$(netstat -tlnp | grep -i dropbear | awk '{print $4}' | cut -d: -f2 | xargs | awk '{print $2}' | head -n1)|g" /etc/stunnel/stunnel.conf
+sed -i "s|Stunnel_Port2|$Stunnel_Port2|g" /etc/stunnel/stunnel.conf
+sed -i "s|openssh_port_c|$(netstat -tlnp | grep -i ssh | awk '{print $4}' | cut -d: -f2 | xargs | awk '{print $2}' | head -n1)|g" /etc/stunnel/stunnel.conf
 
-# konfigurasi stunnel
-sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
-/etc/init.d/stunnel4 restart
+# Restarting stunnel service
+systemctl restart $StunnelDir
 
 cd
 #install sslh
