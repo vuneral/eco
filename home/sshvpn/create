@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script by : jAvaNet
+# Script by : Darknet
 
 
 echo -e "\e[0m                                                   "
@@ -61,7 +61,8 @@ echo -e "         Port Dropbear   :  "$dropbearport
 echo -e "         Port SSL        :  "$stunnel4port
 echo -e "         Port Squid      :  "$squidport
 echo -e "         Port OpenVPN    :  "$openvpnport
-echo -e "              $MYIP:85/configs.zip"
+echo -e "              $MYIP:85/client-tcp.ovpn"
+echo -e "              $MYIP:85/client-udp.ovpn"
 echo -e "                                                  "
 echo -e "\e[037m[*][*][*]======================================[*][*][*]\e[0m"
 fi
