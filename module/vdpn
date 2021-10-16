@@ -52,7 +52,7 @@ apt-get remove --purge exim4 -y
 apt-get install nano wget curl zip unzip tar gzip p7zip-full bc rc openssl cron net-tools dnsutils dos2unix screen bzip2 ccrypt -y
  
 # Now installing all our wanted services
-apt-get install dropbear stunnel4 privoxy ca-certificates nginx ruby apt-transport-https lsb-release squid screenfetch -y
+apt-get install dropbear stunnel4 ca-certificates nginx ruby apt-transport-https lsb-release squid screenfetch -y
 
 # Installing all required packages to install Webmin
 apt-get install perl libnet-ssleay-perl openssl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python dbus libxml-parser-perl -y
@@ -130,14 +130,38 @@ ln -fs /usr/share/zoneinfo/$MyVPS_Time /etc/localtime
 
 # install badvpn
 cd
-wget -O /usr/bin/badvpn-udpgw "https://github.com/vuneral/eco/raw/main/module/badvpn-udpgw64"
-chmod +x /usr/bin/badvpn-udpgw
-sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 4000' /etc/rc.local
-sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 4000' /etc/rc.local
-sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 4000' /etc/rc.local
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 500
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 500
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 500
+printf "%b\n" "\e[32m[\e[0mInfo\e[32m]\e[0m\e[97m running BadVPN-udpgw installation on background\e[0m"
+cat <<'badvpnEOF'> /tmp/install-badvpn.bash
+#!/bin/bash
+if [[ -e /usr/local/bin/badvpn-udpgw ]]; then
+ printf "%s\n" "BadVPN-udpgw already installed"
+ exit 1
+else
+ curl -4skL "https://github.com/ambrop72/badvpn/archive/4b7070d8973f99e7cfe65e27a808b3963e25efc3.zip" -o /tmp/badvpn.zip
+ unzip -qq /tmp/badvpn.zip -d /tmp && rm -f /tmp/badvpn.zip
+ cd /tmp/badvpn-4b7070d8973f99e7cfe65e27a808b3963e25efc3
+ cmake -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1 &> /dev/null
+ make install &> /dev/null
+ rm -rf /tmp/badvpn-4b7070d8973f99e7cfe65e27a808b3963e25efc3
+ cat <<'EOFudpgw' > /lib/systemd/system/badvpn-udpgw.service
+[Unit]
+Description=BadVPN UDP Gateway Server daemon
+Wants=network.target
+After=network.target
+[Service]
+ExecStart=/usr/local/bin/badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 4000 --max-connections-for-client 4000 --loglevel info
+Restart=always
+RestartSec=3
+[Install]
+WantedBy=multi-user.target
+EOFudpgw
+systemctl daemon-reload &>/dev/null
+systemctl restart badvpn-udpgw.service &>/dev/null
+systemctl enable badvpn-udpgw.service &>/dev/null
+fi
+badvpnEOF
+screen -S badvpninstall -dm bash -c "bash /tmp/install-badvpn.bash && rm -f /tmp/install-badvpn.bash"
+}
 
 # install dropbear
 # Removing some duplicate config file
@@ -377,10 +401,6 @@ netfilter-persistent reload
 #Create Admin
 useradd -m Admin
 echo "Admin:1234" | chpasswd
-
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 4000
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 4000
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 4000
 
 echo "12 0 * * * root clear-log && reboot" >> /etc/crontab
 echo "0 0 * * * root xp" >> /etc/crontab
