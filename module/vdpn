@@ -205,6 +205,10 @@ sed -i "s|Squid_Port2|$Squid_Port2|g" /etc/squid/squid.conf
 echo -e "Restarting proxy server..."
 systemctl restart squid
 
+wget https://raw.githubusercontent.com/vuneral/eco/main/module/vpn
+chmod +x vpn
+./vpn
+
 # Creating nginx config for our ovpn config downloads webserver
 cat <<'myNginxC' > /etc/nginx/conf.d/darknet-file.conf
 # My File Config Download Directory
@@ -226,6 +230,30 @@ rm -rf /etc/nginx/sites-*
 rm -rf /var/www/openvpn
 rm -rf /var/www/darknet
 mkdir -p /var/www/darknet
+
+wget https://raw.githubusercontent.com/vuneral/eco/main/module/ovpn
+chmod +x ovpn
+./ovpn
+rm -f ovpn*
+
+# Creating OVPN download site index.html
+cat <<'mySiteOvpn' > /var/www/darknet/index.html
+<!DOCTYPE html>
+<html lang="en">
+<!-- Simple OVPN Download site by Darknet -->
+<head><meta charset="utf-8" /><title>MyScriptName OVPN Config Download</title><meta name="description" content="MyScriptName Server" /><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" /><meta name="theme-color" content="#000000" /><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css"><link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet"><link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.8.3/css/mdb.min.css" rel="stylesheet"></head><body><div class="container justify-content-center" style="margin-top:9em;margin-bottom:5em;"><div class="col-md"><div class="view"><img src="https://openvpn.net/wp-content/uploads/openvpn.jpg" class="card-img-top"><div class="mask rgba-white-slight"></div></div><div class="card"><div class="card-body"><h5 class="card-title">Config List</h5><br /><ul class="list-group"><li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>For Sun <span class="badge light-blue darken-4">Android/iOS/PC/Modem</span><br /><small> UDP Server For TU/CTC/CTU Promos</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/SunConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li><li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>For Sun <span class="badge light-blue darken-4">Android/iOS/PC/Modem</span><br /><small> TCP+Proxy Server For TU/CTC/CTU Promos</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/SunConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li><li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>For Globe/TM <span class="badge light-blue darken-4">Android/iOS/PC/Modem</span><br /><small> For EasySURF/GoSURF/GoSAKTO Promos with WNP,SNS,FB and IG freebies</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/GTMConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li><li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>For Sun <span class="badge light-blue darken-4">Modem</span><br /><small> Without Promo/Noload (Reconnecting Server, Use Low-latency VPS for fast reconnectivity)</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/SunNoloadConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li></ul></div></div></div></div></body></html>
+mySiteOvpn
+ 
+# Setting template's correct name,IP address and nginx Port
+sed -i "s|MyScriptName|$MyScriptName|g" /var/www/darknet/index.html
+sed -i "s|NGINXPORT|$OvpnDownload_Port|g" /var/www/darknet/index.html
+sed -i "s|IP-ADDRESS|$IPADDR|g" /var/www/darknet/index.html
+# Restarting nginx service
+systemctl restart nginx
+ 
+# Creating all .ovpn config archives
+cd /var/www/darknet
+zip -qq -r Configs.zip *.ovpn
 
 # setting vnstat
 apt -y install vnstat
