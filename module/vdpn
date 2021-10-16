@@ -406,7 +406,5 @@ echo -e "\033[1;31m════════════════════�
 history -c
 echo "unset HISTFILE" >> /etc/profile
 cd
-rm -f /root/key.pem
-rm -f /root/cert.pem
 rm -f vdpn*
 clear
