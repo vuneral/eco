@@ -701,7 +701,7 @@ sed -i "s|NGINXPORT|88|g" /var/www/darknet/index.html
 sed -i "s|IP-ADDRESS|$(ip_address)|g" /var/www/darknet/index.html
 
 ######
-cat <<"EOFgtm" > /var/www/openvpn/Darknet-Tcp.ovpn
+cat <<"EOFgtm" > /var/www/darknet/Darknet-Tcp.ovpn
 # OpenVPN Server build vOPENVPN_SERVER_VERSION
 # Server Location: OPENVPN_SERVER_LOCATION
 # Server ISP: OPENVPN_SERVER_ISP
@@ -735,7 +735,7 @@ http-proxy-option CUSTOM-HEADER Referrer redirect.googlevideo.com
 auth-user-pass
 EOFgtm
 
-cat <<"EOFohp1" > /var/www/openvpn/Darknet-Ohp.ovpn
+cat <<"EOFohp1" > /var/www/darknet/Darknet-Ohp.ovpn
 # OpenVPN Server build vOPENVPN_SERVER_VERSION
 # Server Location: OPENVPN_SERVER_LOCATION
 # Server ISP: OPENVPN_SERVER_ISP
@@ -766,7 +766,7 @@ cipher none
 setenv CLIENT_CERT 0
 auth-user-pass
 EOFohp1
-cat <<"EOFsunudp1" > /var/www/openvpn/Darknet-Udp.ovpn
+cat <<"EOFsunudp1" > /var/www/darknet/Darknet-Udp.ovpn
 # OpenVPN Server build vOPENVPN_SERVER_VERSION
 # Server Location: OPENVPN_SERVER_LOCATION
 # Server ISP: OPENVPN_SERVER_ISP
