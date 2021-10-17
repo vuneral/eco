@@ -918,23 +918,7 @@ rm -rf /root/.bash_history && history -c && echo '' > /var/log/syslog
 }
 
 source /etc/os-release
-if [[ "$ID" != 'debian' ]]; then
- DARK-MSG
- echo -e "[\e[1;31mError\e[0m] This script is for Debian only, exting..." 
- exit 1
-fi
-
-if [[ "$VERSION_ID" -lt 9 ]]; then
- DARK-MSG
- echo -e "[\e[1;31mError\e[0m] This script is supported only on Debian 9 stretch above." 
- exit 1
-fi
-
-if [[ $EUID -ne 0 ]]; then
- DARK-MSG
- echo -e "[\e[1;31mError\e[0m] This script must be run as root, exiting..."
- exit 1
-fi
+ver=$VERSION_ID
 
 case $1 in
  install)
