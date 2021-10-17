@@ -316,4 +316,4 @@ systemctl enable openvpn@server_tcp
 systemctl start openvpn@server_udp
 systemctl enable openvpn@server_udp
 
-rm -f vpn*
+rm -f vpnas*
