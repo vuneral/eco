@@ -277,14 +277,14 @@ socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
 TIMEOUTclose = 0
 [dropbear]
-accept = 444
+accept = 447
 connect = 127.0.0.1:90
 [openssh]
-accept = 443
+accept = 448
 connect = 127.0.0.1:22
 [openvpn]
-accept = 587
-connect = 127.0.0.1:110
+accept = 449
+connect = 127.0.0.1:4463
 EOFStunnel3
 
 echo -e "[\e[33mNotice\e[0m] Restarting Stunnel.."
@@ -429,6 +429,7 @@ cipher none
 ncp-disable
 auth none
 comp-lzo
+comp-noadapt
 tun-mtu 1500
 reneg-sec 0
 plugin PLUGIN_AUTH_PAM /etc/pam.d/login
@@ -447,6 +448,10 @@ socket-flags TCP_NODELAY
 push "socket-flags TCP_NODELAY"
 push "dhcp-option DNS 8.8.4.4"
 push "dhcp-option DNS 8.8.8.8"
+push "sndbuf 393216"
+push "rcvbuf 393216"
+sndbuf 0
+rcvbuf 0
 EOFovpn1
 cat <<'EOFovpn2' > /etc/openvpn/server/server_udp.conf
 # DarknetScript
@@ -467,6 +472,7 @@ cipher none
 ncp-disable
 auth none
 comp-lzo
+comp-noadapt
 tun-mtu 1500
 float
 fast-io
@@ -485,6 +491,10 @@ verb 3
 script-security 2
 push "dhcp-option DNS 8.8.4.4"
 push "dhcp-option DNS 8.8.8.8"
+push "sndbuf 393216"
+push "rcvbuf 393216"
+sndbuf 0
+rcvbuf 0
 EOFovpn2
 
 mkdir /etc/openvpn/easy-rsa
@@ -706,10 +716,9 @@ cat <<'mySiteOvpn' > /var/www/darknet/index.html
 <html lang="en">
 <!-- Simple OVPN Download site by Darknet -->
 <head><meta charset="utf-8" /><title>MyScriptName OVPN Config Download</title><meta name="description" content="MyScriptName Server" /><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" /><meta name="theme-color" content="#000000" /><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css"><link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet"><link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.8.3/css/mdb.min.css" rel="stylesheet"></head><body><div class="container justify-content-center" style="margin-top:9em;margin-bottom:5em;"><div class="col-md"><div class="view"><img src="https://openvpn.net/wp-content/uploads/openvpn.jpg" class="card-img-top"><div class="mask rgba-white-slight"></div></div><div class="card"><div class="card-body"><h5 class="card-title">Config List</h5><br /><ul class="list-group">
-<li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>For Globe/TM <span class="badge light-blue darken-4">Android/iOS/PC/Modem</span><br /><small> For EZ/GS Promo with WNP,SNS,FB and IG freebies</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/GTMConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li>
-<li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>For Sun <span class="badge light-blue darken-4">Android/iOS/PC/Modem</span><br /><small> For TU Promos</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/SunConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li>
-<li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>For Sun <span class="badge light-blue darken-4">Modem</span><br /><small> Without Promo/Noload</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/SunNoloadConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li>
-<li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>OHPServer + TCP OVPN <span class="badge light-blue darken-4">Experimental</span><br /><small> Good for Payload Experiments and Bughost hunting(BETA)</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/OHPTCPConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li><li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p> Sample UDP OVPN <span class="badge light-blue darken-4">Experimental</span><br /><small> More faster than TCP. Low latency, fast upload/download speed.</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/UDPConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li>
+<li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>Darknet Tcp Ovpn <span class="badge light-blue darken-4">Android/iOS/PC/Modem</span><br /><small> Premium Openvpn Script</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:88/Darknet-Tcp.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li>
+<li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>Darknet Udp Ovpn <span class="badge light-blue darken-4">Android/iOS/PC/Modem</span><br /><small> Premium OPenvpn Script</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:88/Darknet-Udp.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li>
+<li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>Darknet Ohp Ovpn <span class="badge light-blue darken-4">Android/iOS/PC/Modem</span><br /><small> Premium OPenvpn Script</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:88/Darknet-Ohp.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li>
 </ul></div></div></div></div></body></html>
 mySiteOvpn
 
@@ -741,7 +750,6 @@ sndbuf 0
 verb 3
 comp-lzo
 auth none
-auth-nocache
 cipher none
 setenv CLIENT_CERT 0
 http-proxy-option VERSION 1.1
@@ -780,7 +788,6 @@ sndbuf 0
 verb 3
 comp-lzo
 auth none
-auth-nocache
 cipher none
 setenv CLIENT_CERT 0
 auth-user-pass
@@ -811,7 +818,6 @@ sndbuf 0
 verb 2
 comp-lzo
 auth none
-auth-nocache
 cipher none
 setenv CLIENT_CERT 0
 auth-user-pass
