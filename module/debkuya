@@ -584,29 +584,7 @@ echo -e "[\e[32mInfo\e[0m] Creating Menu scripts.."
 
 cd /usr/local/sbin/
 rm -rf {accounts,base-ports,base-ports-wc,base-script,bench-network,clearcache,connections,create,create_random,create_trial,delete_expired,diagnose,edit_dropbear,edit_openssh,edit_openvpn,edit_ports,edit_squid3,edit_stunnel4,locked_list,menu,options,ram,reboot_sys,reboot_sys_auto,restart_services,server,set_multilogin_autokill,set_multilogin_autokill_lib,show_ports,speedtest,user_delete,user_details,user_details_lib,user_extend,user_list,user_lock,user_unlock}
-wget -q 'https://raw.githubusercontent.com/Bonveio/BonvScripts/master/menu.zip'
-unzip -qq menu.zip
-rm -f menu.zip
-chmod +x ./*
-dos2unix -q ./*
-sed -i "s|\(squidport=\).\+|\1\"\$(cat /etc/squid/squid.conf \| grep -i http_port \| awk '{print \$2}' \| cut -d: -f2 \| xargs )\"|" ./*
-sed -i "s|/usr/bin|/usr/local/sbin|g" set_multilogin_autokill
-sed -i "s|/etc/openvpn/server.conf|/etc/openvpn/server/server_tcp.conf|g" edit_openvpn
-sed -i "s|\(Port_Change=\).\+|\1\"s\|port \$Port\|port \$Port_New\|g\";|" edit_openvpn
-sed -i "/Port_Change=.*/aPort_Change2=\"s\|remote \$(curl -4s http://ipinfo.io/ip).*\|remote \$(curl -4s http://ipinfo.io/ip) \$Port_New\|g\";" edit_openvpn
-sed -i "s|sed -i \$Port_Change|sed -i \"\$Port_Change\"|g" edit_openvpn
-sed -i "/sed -i \"\$Port_Change\" \/root\/openvpnport/ased -i \"\$Port_Change2\" \/var\/www\/openvpn\/*.ovpn" edit_openvpn
-sed -i "s|service openvpn restart|systemctl restart openvpn-server@server_tcp|g" edit_openvpn
-sed -i "s|your OpenVPN Port|your OpenVPN TCP Port|g" edit_openvpn
-sed -i "s|\(Port_Change=\).\+|\1\"s\/http_port\s*0.0.0.0:\$Port\/http_port 0.0.0.0:\$Port_New\/g\";|" edit_squid3
-sed -i "s|Port_Change /etc/privoxy/config|Port_Change /etc/squid/squid.conf|g" edit_squid3
-sed -i "/Port_Change=.*/aPort_Change2=\"s|http-proxy .*\|http-proxy \$(curl -4s http://ipinfo.io/ip) \$Port_New\|g\";" edit_squid3
-sed -i "s|sed -i \$Port_Change|sed -i \"\$Port_Change\"|g" edit_squid3
-sed -i "/sed -i \"\$Port_Change\" \/etc\/privoxy\/config/ased -i \"\$Port_Change2\" \/var\/www\/openvpn\/\*.ovpn" edit_squid3
-sed -i "s|\(Port_Change=\).\+|\1\"s\|Port \$Port\|Port \$Port_New\|g\";|" edit_openssh
-sed -i "s|sed -i \$Port_Change|sed -i \"\$Port_Change\"|g" edit_openssh
-sed -i "s|egrep \"^\$User\" /etc/passwd|cat \< /etc/passwd \| cut -d: -f1 \| grep -x -E \"^\$\{User\}\"|g" create
-cat <<'eofNoload1' > activate_gtm_noload
+cat <<'eofNoload1' > activate_dark
 #!/bin/bash
 if [[ ! -e /etc/ohpserver ]]; then
  printf "%s\n" "OHPServer installation not found, omitting activation.." && exit 1
