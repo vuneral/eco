@@ -168,14 +168,12 @@ screen -S badvpninstall -dm bash -c "bash /tmp/install-badvpn.bash && rm -f /tmp
 
 function ConfigOpenSSH(){
 echo -e "[\e[32mInfo\e[0m] Configuring OpenSSH Service"
-if [[ "$(cat < /etc/ssh/sshd_config | grep -c 'BonvScripts')" -eq 0 ]]; then
+if [[ "$(cat < /etc/ssh/sshd_config | grep -c 'DarknetScripts')" -eq 0 ]]; then
  cp /etc/ssh/sshd_config /etc/ssh/backup.sshd_config
 fi
 cat <<'EOFOpenSSH' > /etc/ssh/sshd_config
-# BonvScripts
-# https://t.me/BonvScripts
-# Please star my Repository: https://github.com/Bonveio/BonvScripts
-# https://phcorner.net/threads/739298
+# DarknetScripts
+# https://t.me/cyberbossz
 Port 22
 Port 225
 ListenAddress 0.0.0.0
@@ -212,8 +210,6 @@ ClientAliveInterval 240
 ClientAliveCountMax 2
 UseDNS no
 EOFOpenSSH
-
-curl -4skL "https://raw.githubusercontent.com/diesel09/genmx8.3/master/sshsslbanner.txt" -o /etc/banner
 
 sed -i '/password\s*requisite\s*pam_cracklib.s.*/d' /etc/pam.d/common-password && sed -i 's|use_authtok ||g' /etc/pam.d/common-password
 
