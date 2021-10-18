@@ -5,7 +5,7 @@
 
 clear
 
-MyScriptName='DarScripts'
+MyScriptName='DarkScripts'
 
 # OpenSSH Ports
 SSH_Port1='22'
@@ -777,4 +777,4 @@ clear
 cd ~
  
 rm -f gross*
-exit 1
+clear
