@@ -4,175 +4,34 @@
 
 clear
 cd ~
+# Initializing IP
 export DEBIAN_FRONTEND=noninteractive
+OS=`uname -m`;
+MYIP=$(wget -qO- ifconfig.co);
+MYIP2="s/xxxxxxxxx/$MYIP/g";
+NET=$(ip -o $ANU -4 route show to default | awk '{print $5}');
+source /etc/os-release
+ver=$VERSION_ID
 
-function ip_address(){
-  local IP="$( ip addr | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -Ev "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\." | head -n 1 )"
-  [ -z "${IP}" ] && IP="$(curl -4s ipv4.icanhazip.com)"
-  [ -z "${IP}" ] && IP="$(curl -4s ipinfo.io/ip)"
-  [ ! -z "${IP}" ] && echo "${IP}" || echo 'ipaddress'
-}
+# Set System Time
+ln -fs /usr/share/zoneinfo/Asia/Kuala_Lumpur /etc/localtime
 
-function DARK-MSG(){
- echo -e " #####################################################"
- echo -e "\e[0m\e[38;5;121m Darknet Debian Installer Script\e[0m"
- echo -e "\e[0m\e[38;5;121m Premium Lite Debian Script\e[0m"
- echo -e " Version-4.0-Lite-Version"
- echo -e " Suitable For Phreaker"
- echo -e ""
- echo -e " Updates: https://t.me/cyberbossz"
- echo -e " #####################################################"
- echo -e ""
-}
+echo -e " #####################################################"
+echo -e "\e[0m\e[38;5;121m Darknet Debian Installer Script\e[0m"
+echo -e "\e[0m\e[38;5;121m Premium Lite Debian Script\e[0m"
+echo -e " Version-4.0-Lite-Version"
+echo -e " Suitable For Phreaker"
+echo -e ""
+echo -e " Updates: https://t.me/cyberbossz"
+echo -e " #####################################################"
+echo -e ""
 
-function InsEssentials(){
-apt update 2>/dev/null
-apt upgrade -y 2>/dev/null
-printf "%b\n" "\e[32m[\e[0mInfo\e[32m]\e[0m\e[97m Please wait..\e[0m"
-apt autoremove --fix-missing -y > /dev/null 2>&1
-apt remove --purge apache* ufw -y > /dev/null 2>&1
+# Goto Root
+cd
 
-apt install nano wget curl zip unzip tar gzip p7zip-full bc rc openssl cron net-tools dnsutils dos2unix screen bzip2 ccrypt lsof -y 2>/dev/null
-
-if [[ "$(command -v firewall-cmd)" ]]; then
- apt remove --purge firewalld -y
- apt autoremove -y -f
-fi
-
-apt install iptables-persistent -y -f
-systemctl restart netfilter-persistent &>/dev/null
-systemctl enable netfilter-persistent &>/dev/null
-
-if [[ "$(grep -Ec '10\s\((B|b)uster\)' /etc/os-release)" -ge 1 ]]; then
- apt install tuned -y 2>/dev/null
- systemctl enable tuned &>/dev/null
- systemctl restart tuned &>/dev/null
- tuned-adm profile throughput-performance 2>/dev/null
-fi
-
-apt install dropbear stunnel4 privoxy ca-certificates nginx ruby apt-transport-https lsb-release squid jq tcpdump dsniff grepcidr screenfetch -y 2>/dev/null
-
-apt install perl libnet-ssleay-perl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python dbus libxml-parser-perl shared-mime-info -y 2>/dev/null
-
-gem install lolcat 2>/dev/null
-apt autoremove --fix-missing -y &>/dev/null
-
-rm -rf /etc/apt/sources.list.d/openvpn*
-echo "deb http://build.openvpn.net/debian/openvpn/stable $(lsb_release -sc) main" > /etc/apt/sources.list.d/openvpn.list
-apt-key del E158C569 &> /dev/null
-
-wget -qO - https://raw.githubusercontent.com/Bonveio/BonvScripts/master/openvpn-repo.gpg | apt-key add -
-
-apt update 2>/dev/null
-apt install openvpn git build-essential libssl-dev libnss3-dev cmake -y 2>/dev/null
-apt autoremove --fix-missing -y &>/dev/null
-apt clean 2>/dev/null
-
-if [[ "$(command -v squid)" ]]; then
- if [[ "$(squid -v | grep -Ec '(V|v)ersion\s3.5.23')" -lt 1 ]]; then
-  apt remove --purge squid -y -f 2>/dev/null
-  wget "http://security.debian.org/debian-security/pool/updates/main/s/squid3/squid_3.5.23-5+deb9u5_amd64.deb" -qO squid.deb
-  dpkg -i squid.deb
-  rm -f squid.deb
- else
-  echo -e "Squid v3.5.23 already installed"
- fi
-else
- apt install libecap3 squid-common squid-langpack -y -f 2>/dev/null
- wget "http://security.debian.org/debian-security/pool/updates/main/s/squid3/squid_3.5.23-5+deb9u5_amd64.deb" -qO squid.deb
- dpkg -i squid.deb
- rm -f squid.deb
-fi
-
-## Running FFSend installation in background
-rm -rf {/usr/bin/ffsend,/usr/local/bin/ffsend}
-printf "%b\n" "\e[32m[\e[0mInfo\e[32m]\e[0m\e[97m running FFSend installation on background\e[0m"
-screen -S ffsendinstall -dm bash -c "curl -4skL "https://github.com/timvisee/ffsend/releases/download/v0.2.65/ffsend-v0.2.65-linux-x64-static" -o /usr/bin/ffsend && chmod a+x /usr/bin/ffsend"
-hostnamectl set-hostname localhost &> /dev/null
-printf "%b\n" "\e[32m[\e[0mInfo\e[32m]\e[0m\e[97m running DDoS-deflate installation on background\e[0m"
-cat <<'ddosEOF'> /tmp/install-ddos.bash
-#!/bin/bash
-if [[ -e /etc/ddos ]]; then
- printf "%s\n" "DDoS-deflate already installed" && exit 1
-else
- curl -4skL "https://github.com/jgmdev/ddos-deflate/archive/master.zip" -o ddos.zip
- unzip -qq ddos.zip
- rm -rf ddos.zip
- cd ddos-deflate-master
- ./install.sh &> /dev/null
- cd .. && rm -rf ddos-deflate-master
- systemctl start ddos &> /dev/null
- systemctl enable ddos &> /dev/null
-fi
-ddosEOF
-screen -S ddosinstall -dm bash -c "bash /tmp/install-ddos.bash && rm -f /tmp/install-ddos.bash"
-
-printf "%b\n" "\e[32m[\e[0mInfo\e[32m]\e[0m\e[97m running Iptables configuration on background\e[0m"
-cat <<'iptEOF'> /tmp/iptables-config.bash
-#!/bin/bash
-IPADDR="$(curl -4sk http://ipinfo.io/ip)"
-PNET="$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)"
-CIDR="192.168.0.0/16"
-iptables -P INPUT ACCEPT
-iptables -P FORWARD ACCEPT
-iptables -P OUTPUT ACCEPT
-iptables -t nat -F
-iptables -t mangle -F
-iptables -F
-iptables -X
-iptables -A INPUT -s $IPADDR -p tcp -m multiport --dport 1:65535 -j ACCEPT
-iptables -A INPUT -s $IPADDR -p udp -m multiport --dport 1:65535 -j ACCEPT
-iptables -A INPUT -p tcp --dport 25 -j REJECT   
-iptables -A FORWARD -p tcp --dport 25 -j REJECT
-iptables -A OUTPUT -p tcp --dport 25 -j REJECT
-iptables -I FORWARD -s $CIDR -j ACCEPT
-iptables -t nat -A POSTROUTING -s $CIDR -o $PNET -j MASQUERADE
-iptables -t nat -A POSTROUTING -s $CIDR -o $PNET -j SNAT --to-source $IPADDR
-iptables-save > /etc/iptables/rules.v4
-iptEOF
-screen -S configIptables -dm bash -c "bash /tmp/iptables-config.bash && rm -f /tmp/iptables-config.bash"
-
-printf "%b\n" "\e[32m[\e[0mInfo\e[32m]\e[0m\e[97m running BadVPN-udpgw installation on background\e[0m"
-cat <<'badvpnEOF'> /tmp/install-badvpn.bash
-#!/bin/bash
-if [[ -e /usr/local/bin/badvpn-udpgw ]]; then
- printf "%s\n" "BadVPN-udpgw already installed"
- exit 1
-else
- curl -4skL "https://github.com/ambrop72/badvpn/archive/4b7070d8973f99e7cfe65e27a808b3963e25efc3.zip" -o /tmp/badvpn.zip
- unzip -qq /tmp/badvpn.zip -d /tmp && rm -f /tmp/badvpn.zip
- cd /tmp/badvpn-4b7070d8973f99e7cfe65e27a808b3963e25efc3
- cmake -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1 &> /dev/null
- make install &> /dev/null
- rm -rf /tmp/badvpn-4b7070d8973f99e7cfe65e27a808b3963e25efc3
- cat <<'EOFudpgw' > /lib/systemd/system/badvpn-udpgw.service
-[Unit]
-Description=BadVPN UDP Gateway Server daemon
-Wants=network.target
-After=network.target
-[Service]
-ExecStart=/usr/local/bin/badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 4000 --max-connections-for-client 4000 --loglevel info
-Restart=always
-RestartSec=3
-[Install]
-WantedBy=multi-user.target
-EOFudpgw
-systemctl daemon-reload &>/dev/null
-systemctl restart badvpn-udpgw.service &>/dev/null
-systemctl enable badvpn-udpgw.service &>/dev/null
-fi
-badvpnEOF
-screen -S badvpninstall -dm bash -c "bash /tmp/install-badvpn.bash && rm -f /tmp/install-badvpn.bash"
-}
-
-
-function ConfigOpenSSH(){
-echo -e "[\e[32mInfo\e[0m] Configuring OpenSSH Service"
-if [[ "$(cat < /etc/ssh/sshd_config | grep -c 'DarknetScripts')" -eq 0 ]]; then
- cp /etc/ssh/sshd_config /etc/ssh/backup.sshd_config
-fi
+cp /etc/ssh/sshd_config /etc/ssh/backup.sshd_config
 cat <<'EOFOpenSSH' > /etc/ssh/sshd_config
-# DarknetScripts
+# DarkScripts
 # https://t.me/cyberbossz
 Port 22
 Port 225
@@ -213,15 +72,102 @@ EOFOpenSSH
 
 sed -i '/password\s*requisite\s*pam_cracklib.s.*/d' /etc/pam.d/common-password && sed -i 's|use_authtok ||g' /etc/pam.d/common-password
 
-echo -e "[\e[33mNotice\e[0m] Restarting OpenSSH Service.."
-systemctl restart ssh &> /dev/null
-}
+systemctl restart ssh
 
+# System Setup
+cat > /etc/systemd/system/rc-local.service <<-END
+[Unit]
+Description=/etc/rc.local
+ConditionPathExists=/etc/rc.local
+[Service]
+Type=forking
+ExecStart=/etc/rc.local start
+TimeoutSec=0
+StandardOutput=tty
+RemainAfterExit=yes
+SysVStartPriority=99
+[Install]
+WantedBy=multi-user.target
+END
 
-function ConfigDropbear(){
-echo -e "[\e[32mInfo\e[0m] Configuring Dropbear.."
+# Reboot Settings
+cat > /etc/rc.local <<-END
+#!/bin/sh -e
+# rc.local
+# By default this script does nothing.
+exit 0
+END
+
+# Set Permissions
+chmod +x /etc/rc.local
+
+# Enable On Reboot
+systemctl enable rc-local
+systemctl start rc-local.service
+
+# Disable IPV6
+echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
+sed -i '$ i\echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6' /etc/rc.local
+
+# Update
+apt update -y
+apt upgrade -y
+apt dist-upgrade -y
+
+# Install Wget And Curl
+apt -y install wget curl
+
+# Install Components
+apt-get -y install libio-pty-perl libauthen-pam-perl apt-show-versions libnet-ssleay-perl
+apt autoremove --fix-missing -y
+apt remove --purge apache* ufw -y
+
+apt install nano wget curl zip unzip tar gzip p7zip-full bc rc openssl cron net-tools dnsutils dos2unix screen bzip2 ccrypt lsof -y 
+
+apt remove --purge firewalld -y
+apt autoremove -y -f
+
+apt install iptables-persistent -y -f
+systemctl restart netfilter-persistent
+systemctl enable netfilter-persistent 
+
+apt install tuned -y 
+systemctl enable tuned
+systemctl restart tuned 
+tuned-adm profile throughput-performance 
+apt autoremove --fix-missing -y
+
+apt install dropbear stunnel4 privoxy ca-certificates nginx ruby apt-transport-https lsb-release squid jq tcpdump dsniff grepcidr screenfetch -y
+
+apt install perl libnet-ssleay-perl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python dbus libxml-parser-perl shared-mime-info -y
+
+gem install lolcat
+apt autoremove --fix-missing -y
+
+rm -rf /etc/apt/sources.list.d/openvpn*
+echo "deb http://build.openvpn.net/debian/openvpn/stable $(lsb_release -sc) main" > /etc/apt/sources.list.d/openvpn.list
+apt-key del E158C569
+
+wget -qO - https://raw.githubusercontent.com/Bonveio/BonvScripts/master/openvpn-repo.gpg | apt-key add -
+
+apt update
+apt install openvpn git build-essential libssl-dev libnss3-dev cmake -y
+apt autoremove --fix-missing -y
+apt clean 2>/dev/null
+
+apt remove --purge squid -y -f
+wget "http://security.debian.org/debian-security/pool/updates/main/s/squid3/squid_3.5.23-5+deb9u5_amd64.deb" -qO squid.deb
+dpkg -i squid.deb
+rm -f squid.deb
+
+apt install libecap3 squid-common squid-langpack -y -f
+wget "http://security.debian.org/debian-security/pool/updates/main/s/squid3/squid_3.5.23-5+deb9u5_amd64.deb" -qO squid.deb
+dpkg -i squid.deb
+rm -f squid.deb
+
+#Setup Dropbear
 cat <<'EOFDropbear' > /etc/default/dropbear
-# DarknetScript
+# DarkScripts
 # https://t.me/cyberbossz
 NO_START=0
 DROPBEAR_PORT=445
@@ -233,21 +179,11 @@ DROPBEAR_ECDSAKEY="/etc/dropbear/dropbear_ecdsa_host_key"
 DROPBEAR_RECEIVE_WINDOW=65536
 EOFDropbear
 
-echo -e "[\e[33mNotice\e[0m] Restarting Dropbear Service.."
-systemctl enable dropbear &>/dev/null
-systemctl restart dropbear &>/dev/null
-}
+systemctl enable dropbear
+systemctl restart dropbear
 
-
-function ConfigStunnel(){
-if [[ ! "$(command -v stunnel4)" ]]; then
- StunnelDir='stunnel'
- else
- StunnelDir='stunnel4'
-fi
-echo -e "[\e[32mInfo\e[0m] Configuring Stunnel.."
-cat <<'EOFStunnel1' > "/etc/default/$StunnelDir"
-# DarknetScript
+cat <<'EOFStunnel1' > "/etc/default/stunnel4"
+# DarkScripts
 # https://t.me/cyberbossz
 ENABLED=1
 FILES="/etc/stunnel/*.conf"
@@ -259,12 +195,10 @@ RLIMITS=""
 EOFStunnel1
 
 rm -f /etc/stunnel/*
-echo -e "[\e[32mInfo\e[0m] Cloning Stunnel.pem.."
-openssl req -new -x509 -days 9999 -nodes -subj "/C=GB/ST=Darknet Script/L=Malaysia/O=Premium Lite/CN=Malaysia RSA Domain Validation Secure Server CA" -out /etc/stunnel/stunnel.pem -keyout /etc/stunnel/stunnel.pem &> /dev/null
+openssl req -new -x509 -days 9999 -nodes -subj "/C=GB/ST=Greater Malaysia/L=Kuala_Lumpur/O=Cheras Limited/CN=Malaysia RSA Domain Validation Secure Server CA" -out /etc/stunnel/stunnel.pem -keyout /etc/stunnel/stunnel.pem
 
-echo -e "[\e[32mInfo\e[0m] Creating Stunnel server config.."
 cat <<'EOFStunnel3' > /etc/stunnel/stunnel.conf
-# DarknetScript
+# DarkScripts
 # https://t.me/cyberbossz
 pid = /var/run/stunnel.pid
 cert = /etc/stunnel/stunnel.pem
@@ -274,7 +208,7 @@ socket = r:TCP_NODELAY=1
 TIMEOUTclose = 0
 [dropbear]
 accept = 447
-connect = 127.0.0.1:90
+connect = 127.0.0.1:445
 [openssh]
 accept = 448
 connect = 127.0.0.1:22
@@ -283,16 +217,11 @@ accept = 449
 connect = 127.0.0.1:4463
 EOFStunnel3
 
-echo -e "[\e[33mNotice\e[0m] Restarting Stunnel.."
-systemctl restart "$StunnelDir"
-}
+systemctl restart stunnel4
 
-
-function ConfigProxy(){
-echo -e "[\e[32mInfo\e[0m] Configuring Privoxy.."
 rm -f /etc/privoxy/config*
 cat <<'EOFprivoxy' > /etc/privoxy/config
-# DarknetScript
+# DarkScripts
 # https://t.me/cyberbossz
 user-manual /usr/share/doc/privoxy/user-manual
 confdir /etc/privoxy
@@ -322,11 +251,11 @@ cat <<'EOFprivoxy2' > /etc/privoxy/user.action
 IP-ADDRESS
 127.0.0.1
 EOFprivoxy2
-sed -i "s|IP-ADDRESS|$(ip_address)|g" /etc/privoxy/user.action
-echo -e "[\e[32mInfo\e[0m] Configuring Squid.."
+sed -i "s|IP-ADDRESS|$MYIP|g" /etc/privoxy/user.action
+
 rm -rf /etc/squid/sq*
 cat <<'EOFsquid' > /etc/squid/squid.conf
-# DarknetScript
+# DarkScripts
 # https://t.me/cyberbossz
 acl VPN dst IP-ADDRESS/32
 http_access allow VPN
@@ -334,23 +263,17 @@ http_access deny all
 http_port 0.0.0.0:8000
 http_port 0.0.0.0:8181
 acl bonv src 0.0.0.0/0.0.0.0
-no_cache deny bonv
 dns_nameservers 1.1.1.1 1.0.0.1
 visible_hostname localhost
 EOFsquid
-sed -i "s|IP-ADDRESS|$(ip_address)|g" /etc/squid/squid.conf
+sed -i "s|IP-ADDRESS|$MYIP|g" /etc/squid/squid.conf
 
-echo -e "[\e[33mNotice\e[0m] Restarting Privoxy Service.."
 systemctl restart privoxy
-echo -e "[\e[33mNotice\e[0m] Restarting Squid Service.."
 systemctl restart squid
 
-echo -e "[\e[32mInfo\e[0m] Configuring OHPServer"
-if [[ ! -e /etc/ohpserver ]]; then
- mkdir /etc/ohpserver
- else
- rm -rf /etc/ohpserver/*
-fi
+mkdir /etc/ohpserver
+rm -rf /etc/ohpserver/*
+
 curl -4skL "https://github.com/lfasmpao/open-http-puncher/releases/download/0.1/ohpserver-linux32.zip" -o /etc/ohpserver/ohp.zip
 unzip -qq /etc/ohpserver/ohp.zip -d /etc/ohpserver
 rm -rf /etc/ohpserver/ohp.zip
@@ -358,7 +281,7 @@ chmod +x /etc/ohpserver/ohpserver
 
 cat <<'Ohp1' > /etc/ohpserver/run
 #!/bin/bash
-# DarknetScript
+# DarkScripts
 # https://t.me/cyberbossz
 # OHPServer startup script
 /etc/ohpserver/ohpserver -port 8085 -proxy 127.0.0.1:25800 -tunnel 127.0.0.1:445 > /etc/ohpserver/dropbear.log &
@@ -369,7 +292,7 @@ chmod +x /etc/ohpserver/run
 
 cat <<'Ohp2' > /etc/ohpserver/stop
 #!/bin/bash
-# DarknetScript
+# DarkScripts
 # https://t.me/cyberbossz
 # OHPServer stop script
 lsof -t -i tcp:8085 -s tcp:listen | xargs kill 2>/dev/null ### Dropbear
@@ -384,32 +307,25 @@ Description=OpenHTTP Puncher Server
 Wants=network.target
 After=network.target
 [Service]
-ExecStart=/bin/bash /etc/ohpserver/run 2>/dev/null
-ExecStop=/bin/bash /etc/ohpserver/stop 2>/dev/null
+ExecStart=/bin/bash /etc/ohpserver/run
+ExecStop=/bin/bash /etc/ohpserver/stop
 Restart=always
 RestartSec=3
 [Install]
 WantedBy=multi-user.target
 EOFohp
-systemctl daemon-reload &>/dev/null
-systemctl restart ohpserver.service &>/dev/null
-systemctl enable ohpserver.service &>/dev/null
-}
+systemctl daemon-reload
+systemctl restart ohpserver.service
+systemctl enable ohpserver.service
 
-function ConfigOpenVPN(){
-echo -e "[\e[32mInfo\e[0m] Configuring OpenVPN server.."
-if [[ ! -e /etc/openvpn ]]; then
- mkdir -p /etc/openvpn
- else
- rm -rf /etc/openvpn/*
-fi
+mkdir -p /etc/openvpn
+rm -rf /etc/openvpn/*
 mkdir -p /etc/openvpn/server
 mkdir -p /etc/openvpn/client
 
 cat <<'EOFovpn1' > /etc/openvpn/server/server_tcp.conf
-# DarknetScript
+# DarkScript
 # https://t.me/cyberbossz
-# Stable Repo Ovpn
 port 4463
 dev tun
 proto tcp
@@ -425,7 +341,6 @@ cipher none
 ncp-disable
 auth none
 comp-lzo
-comp-noadapt
 tun-mtu 1500
 reneg-sec 0
 plugin PLUGIN_AUTH_PAM /etc/pam.d/login
@@ -433,7 +348,7 @@ verify-client-cert none
 username-as-common-name
 max-clients 4080
 topology subnet
-server 192.168.0.0 255.255.255.0
+server 172.29.0.0 255.255.255.0
 push "redirect-gateway def1"
 keepalive 5 30
 status /etc/openvpn/tcp_stats.log
@@ -442,17 +357,17 @@ verb 3
 script-security 2
 socket-flags TCP_NODELAY
 push "socket-flags TCP_NODELAY"
-push "dhcp-option DNS 8.8.4.4"
 push "dhcp-option DNS 8.8.8.8"
+push "dhcp-option DNS 8.8.4.4"
 push "sndbuf 393216"
 push "rcvbuf 393216"
 sndbuf 0
 rcvbuf 0
 EOFovpn1
+
 cat <<'EOFovpn2' > /etc/openvpn/server/server_udp.conf
-# DarknetScript
+# DarkScript
 # https://t.me/cyberbossz
-# Stable Repo Ovpn
 port 25222
 dev tun
 proto udp
@@ -468,7 +383,6 @@ cipher none
 ncp-disable
 auth none
 comp-lzo
-comp-noadapt
 tun-mtu 1500
 float
 fast-io
@@ -478,15 +392,15 @@ verify-client-cert none
 username-as-common-name
 max-clients 4080
 topology subnet
-server 192.168.2.0 255.255.255.0
+server 172.29.16.0 255.255.255.0
 push "redirect-gateway def1"
 keepalive 5 30
 status /etc/openvpn/udp_stats.log
 log /etc/openvpn/udp.log
 verb 3
 script-security 2
-push "dhcp-option DNS 8.8.4.4"
 push "dhcp-option DNS 8.8.8.8"
+push "dhcp-option DNS 8.8.4.4"
 push "sndbuf 393216"
 push "rcvbuf 393216"
 sndbuf 0
@@ -494,17 +408,13 @@ rcvbuf 0
 EOFovpn2
 
 mkdir /etc/openvpn/easy-rsa
-mkdir /etc/openvpn/easy-rsa-ec
-
-curl -4skL "https://raw.githubusercontent.com/Bonveio/BonvScripts/master/bonvscripts-easyrsa.zip" -o /etc/openvpn/easy-rsa/rsa.zip 2> /dev/null
-
+curl -4skL "https://raw.githubusercontent.com/Bonveio/BonvScripts/master/bonvscripts-easyrsa.zip" -o /etc/openvpn/easy-rsa/rsa.zip
 unzip -qq /etc/openvpn/easy-rsa/rsa.zip -d /etc/openvpn/easy-rsa
-
 rm -f /etc/openvpn/easy-rsa/rsa.zip
 
 cd /etc/openvpn/easy-rsa
 chmod +x easyrsa
-./easyrsa build-server-full server nopass &> /dev/null
+./easyrsa build-server-full server nopass
 cp pki/ca.crt /etc/openvpn/ca.crt
 cp pki/issued/server.crt /etc/openvpn/bonvscripts.crt
 cp pki/private/server.key /etc/openvpn/bonvscripts.key
@@ -537,7 +447,7 @@ cat <<'NUovpn' > /etc/openvpn/server/server.conf
  # executed/raised from this script (OpenVPN_TCP_Port/OpenVPN_UDP_Port)
  #
  # Enjoy the new update
- # Script Updated by Darknet
+ # Script Updated by Dark
 NUovpn
 
 wget -qO /etc/openvpn/b.zip 'https://raw.githubusercontent.com/Bonveio/BonvScripts/master/openvpn_plugin64'
@@ -566,81 +476,23 @@ fi
 sed -i 's|ExecStart=.*|ExecStart=/usr/sbin/openvpn --status %t/openvpn-server/status-%i.log --status-version 2 --suppress-timestamps --config %i.conf|g' /lib/systemd/system/openvpn-server\@.service
 systemctl daemon-reload
 
-echo -e "[\e[33mNotice\e[0m] Restarting OpenVPN Service.."
-systemctl restart openvpn-server &> /dev/null
-systemctl start openvpn-server@server_tcp &>/dev/null
-systemctl start openvpn-server@server_udp &>/dev/null
-systemctl enable openvpn-server@server_tcp &> /dev/null
-systemctl enable openvpn-server@server_udp &> /dev/null
+systemctl restart openvpn-server 
+systemctl start openvpn-server@server_tcp
+systemctl start openvpn-server@server_udp 
+systemctl enable openvpn-server@server_tcp 
+systemctl enable openvpn-server@server_udp
 
-systemctl start openvpn-server@ec_server_tcp &> /dev/null
-systemctl start openvpn-server@ec_server_udp &> /dev/null
-systemctl enable openvpn-server@ec_server_tcp &> /dev/null
-systemctl enable openvpn-server@ec_server_udp &> /dev/null
-}
-
-function ConfigMenu(){
-echo -e "[\e[32mInfo\e[0m] Creating Menu scripts.."
-
-cd /usr/local/sbin/
-rm -rf {accounts,base-ports,base-ports-wc,base-script,bench-network,clearcache,connections,create,create_random,create_trial,delete_expired,diagnose,edit_dropbear,edit_openssh,edit_openvpn,edit_ports,edit_squid3,edit_stunnel4,locked_list,menu,options,ram,reboot_sys,reboot_sys_auto,restart_services,server,set_multilogin_autokill,set_multilogin_autokill_lib,show_ports,speedtest,user_delete,user_details,user_details_lib,user_extend,user_list,user_lock,user_unlock}
-cat <<'eofNoload1' > activate_dark
-#!/bin/bash
-if [[ ! -e /etc/ohpserver ]]; then
- printf "%s\n" "OHPServer installation not found, omitting activation.." && exit 1
-elif [[ ! -e /lib/systemd/system/ohpserver.service ]]; then
- printf "%s\n" "OHPServer daemon not found, omitting activation.." && exit 1
-fi
-systemctl stop ohpserver.service &>/dev/null
-sed -i "/^.*\(D\|d\)ropbear.*$/d" /etc/ohpserver/{run,stop}
-echo 'lsof -t -i tcp:80 -s tcp:listen | xargs kill 2>/dev/null ### Dropbear' >> /etc/ohpserver/stop
-sed -i "/^.*startup script/a\/etc\/ohpserver\/ohpserver -port 80 -proxy 127.0.0.1:25800 -tunnel 127.0.0.1:445 \&" /etc/ohpserver/run
-systemctl start ohpserver.service &>/dev/null
-echo -e "Super SSH Setup now ready to use\nServer running on Port: 80\nRemember: reconnect your VPN every 50-60 seconds"
-exit 0
-eofNoload1
-chmod +x /usr/local/sbin/activate_dark
-
-cat <<'eofNoload2' > deactivate_dark
-#!/bin/bash
-if [[ ! -e /etc/ohpserver ]]; then
- printf "%s\n" "OHPServer installation not found, omitting activation.." && exit 1
-elif [[ ! -e /lib/systemd/system/ohpserver.service ]]; then
- printf "%s\n" "OHPServer daemon not found, omitting activation.." && exit 1
-fi
-systemctl stop ohpserver.service &>/dev/null
-sed -i "/^.*\(D\|d\)ropbear.*$/d" /etc/ohpserver/{run,stop}
-echo 'lsof -t -i tcp:8085 -s tcp:listen | xargs kill 2>/dev/null ### Dropbear' >> /etc/ohpserver/stop
-sed -i "/^.*startup script/a\/etc\/ohpserver\/ohpserver -port 8085 -proxy 127.0.0.1:25800 -tunnel 127.0.0.1:445 \&" /etc/ohpserver/run
-systemctl start ohpserver.service &>/dev/null
-echo -e "GTM Noload SSH Setup deactivated\nYour Dropbear+OHPServer now back on Port 8085"
-exit 0
-eofNoload2
-chmod +x /usr/local/sbin/deactivate_dark
-
-cd ~
-}
-
-function ConfigSyscript(){
-echo -e "[\e[32mInfo\e[0m] Creating Startup scripts.."
-if [[ ! -e /etc/bonveio ]]; then
- mkdir -p /etc/darknet
-fi
+mkdir -p /etc/darknet
 cat <<'EOFSH' > /etc/darknet/startup.sh
 #!/bin/bash
-# DarknetScript
+# DarkScripts
 # https://t.me/cyberbossz
+#
 ln -fs /usr/share/zoneinfo/Asia/Kuala_Lumpur /etc/localtime
 export DEBIAN_FRONTEND=noninteractive
 #apt clean
-/usr/local/sbin/delete_expired &> /dev/null
 EOFSH
 chmod +x /etc/darknet/startup.sh
-
-echo 'clear' > /etc/profile.d/bonv.sh
-echo 'echo '' > /var/log/syslog' >> /etc/profile.d/bonv.sh
-echo 'screenfetch -p -A Debian' >> /etc/profile.d/bonv.sh
-chmod +x /etc/profile.d/bonv.sh
 
 echo "[Unit]
 Description=Darknet Startup Script
@@ -655,37 +507,43 @@ WantedBy=multi-user.target" > /etc/systemd/system/darknet.service
 chmod +x /etc/systemd/system/darknet.service
 systemctl daemon-reload
 systemctl start darknet
-systemctl enable darknet &> /dev/null
+systemctl enable darknet
 
 sed -i '/0\s*4\s*.*/d' /etc/crontab
 echo -e "12 0\t* * *\troot\treboot" >> /etc/crontab
 systemctl restart cron
 
-}
-
-function ConfigNginxOvpn(){
-echo -e "[\e[32mInfo\e[0m] Configuring Nginx configs.."
-
-cat <<'EOFnginx' > /etc/nginx/conf.d/dark-file.conf
-# DarknetScript
+cat <<'EOFnginx' > /etc/nginx/conf.d/vps.conf
+# DarkScripts
 # https://t.me/cyberbossz
 #
 server {
- listen 0.0.0.0:88;
- server_name localhost;
- root /var/www/darknet;
- index index.html;
+  listen       88;
+  server_name  127.0.0.1 localhost;
+  access_log /var/log/nginx/vps-access.log;
+  error_log /var/log/nginx/vps-error.log error;
+  root   /home/vps/public_html;
+
+  location / {
+    index  index.html index.htm index.php;
+    try_files $uri $uri/ /index.php?$args;
+  }
+
+  location ~ \.php$ {
+    include /etc/nginx/fastcgi_params;
+    fastcgi_pass  127.0.0.1:9000;
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+  }
 }
 EOFnginx
 
 rm -rf /etc/nginx/sites-*
 rm -rf /usr/share/nginx/html
 rm -rf /var/www/openvpn
-mkdir -p /var/www/darknet
+mkdir -p /var/www/openvpn
 
-echo -e "[\e[32mInfo\e[0m] Creating OpenVPN client configs.."
-
-cat <<'mySiteOvpn' > /var/www/darknet/index.html
+cat <<'mySiteOvpn' > /var/www/openvpn/index.html
 <!DOCTYPE html>
 <html lang="en">
 <!-- Simple OVPN Download site by Darknet -->
@@ -696,12 +554,12 @@ cat <<'mySiteOvpn' > /var/www/darknet/index.html
 </ul></div></div></div></div></body></html>
 mySiteOvpn
 
-sed -i "s|MyScriptName|DarknetScript|g" /var/www/darknet/index.html
-sed -i "s|NGINXPORT|88|g" /var/www/darknet/index.html
-sed -i "s|IP-ADDRESS|$(ip_address)|g" /var/www/darknet/index.html
+sed -i "s|MyScriptName|DarknetScript|g" /var/www/openvpn/index.html
+sed -i "s|NGINXPORT|88|g" /var/www/openvpn/index.html
+sed -i "s|IP-ADDRESS|$MYIP|g" /var/www/openvpn/index.html
 
 ######
-cat <<"EOFgtm" > /var/www/darknet/Darknet-Tcp.ovpn
+cat <<"EOFgtm" > /var/www/openvpn/Darknet-Tcp.ovpn
 # OpenVPN Server build vOPENVPN_SERVER_VERSION
 # Server Location: OPENVPN_SERVER_LOCATION
 # Server ISP: OPENVPN_SERVER_ISP
@@ -735,7 +593,7 @@ http-proxy-option CUSTOM-HEADER Referrer redirect.googlevideo.com
 auth-user-pass
 EOFgtm
 
-cat <<"EOFohp1" > /var/www/darknet/Darknet-Ohp.ovpn
+cat <<"EOFohp1" > /var/www/openvpn/Darknet-Ohp.ovpn
 # OpenVPN Server build vOPENVPN_SERVER_VERSION
 # Server Location: OPENVPN_SERVER_LOCATION
 # Server ISP: OPENVPN_SERVER_ISP
@@ -766,7 +624,7 @@ cipher none
 setenv CLIENT_CERT 0
 auth-user-pass
 EOFohp1
-cat <<"EOFsunudp1" > /var/www/darknet/Darknet-Udp.ovpn
+cat <<"EOFsunudp1" > /var/www/openvpn/Darknet-Udp.ovpn
 # OpenVPN Server build vOPENVPN_SERVER_VERSION
 # Server Location: OPENVPN_SERVER_LOCATION
 # Server ISP: OPENVPN_SERVER_ISP
@@ -797,54 +655,23 @@ setenv CLIENT_CERT 0
 auth-user-pass
 EOFsunudp1
 
-sed -i "s|IP-ADDRESS|$(ip_address)|g" /var/www/darknet/Darknet-Tcp.ovpn
-echo -e "<ca>\n$(cat /etc/openvpn/ca.crt)\n</ca>" >> /var/www/darknet/Darknet-Tcp.ovpn
+sed -i "s|IP-ADDRESS|$(ip_address)|g" /var/www/openvpn/Darknet-Tcp.ovpn
+echo -e "<ca>\n$(cat /etc/openvpn/ca.crt)\n</ca>" >> /var/www/openvpn/Darknet-Tcp.ovpn
 
-sed -i "s|IP-ADDRESS|$(ip_address)|g" /var/www/darknet/Darknet-Ohp.ovpn
-echo -e "<ca>\n$(cat /etc/openvpn/ca.crt)\n</ca>" >> /var/www/darknet/Darknet-Ohp.ovpn
+sed -i "s|IP-ADDRESS|$(ip_address)|g" /var/www/openvpn/Darknet-Ohp.ovpn
+echo -e "<ca>\n$(cat /etc/openvpn/ca.crt)\n</ca>" >> /var/www/openvpn/Darknet-Ohp.ovpn
 
-sed -i "s|IP-ADDRESS|$(ip_address)|g" /var/www/darknet/Darknet-Udp.ovpn
-echo -e "<ca>\n$(cat /etc/openvpn/ca.crt)\n</ca>" >> /var/www/darknet/Darknet-Udp.ovpn
+sed -i "s|IP-ADDRESS|$(ip_address)|g" /var/www/openvpn/Darknet-Udp.ovpn
+echo -e "<ca>\n$(cat /etc/openvpn/ca.crt)\n</ca>" >> /var/www/openvpn/Darknet-Udp.ovpn
 
-sed -i "s|OPENVPN_SERVER_VERSION|$(openvpn --version | cut -d" " -f2 | head -n1)|g" /var/www/darknet/*.ovpn
-sed -i "s|OPENVPN_SERVER_LOCATION|$(curl -4s http://ipinfo.io/country), $(curl -4s http://ipinfo.io/region)|g" /var/www/darknet/*.ovpn
-sed -i "s|OPENVPN_SERVER_ISP|$(curl -4s http://ipinfo.io/org | sed -e 's/[^ ]* //')|g" /var/www/darknet/*.ovpn
+sed -i "s|OPENVPN_SERVER_VERSION|$(openvpn --version | cut -d" " -f2 | head -n1)|g" /var/www/openvpn/*.ovpn
+sed -i "s|OPENVPN_SERVER_LOCATION|$(curl -4s http://ipinfo.io/country), $(curl -4s http://ipinfo.io/region)|g" /var/www/openvpn/*.ovpn
+sed -i "s|OPENVPN_SERVER_ISP|$(curl -4s http://ipinfo.io/org | sed -e 's/[^ ]* //')|g" /var/www/openvpn/*.ovpn
 
 cd /var/www/openvpn
 zip -r Configs.zip *.ovpn &> /dev/null
 cd
 
-echo -e "[\e[33mNotice\e[0m] Restarting Nginx Service.."
-systemctl restart nginx
-}
-
-function InstallScript(){
-if [[ ! -e /dev/net/tun ]]; then
- DARK-MSG
- echo -e "[\e[1;31m×\e[0m] You cant use this script without TUN Module installed/embedded in your machine, file a support ticket to your machine admin about this matter"
- echo -e "[\e[1;31m-\e[0m] Script is now exiting..."
- exit 1
-fi
-
-rm -rf /root/.bash_history && echo '' > /var/log/syslog && history -c
-
-## Start Installation
-clear
-clear
-DARK-MSG
-echo -e ""
-InsEssentials
-ConfigOpenSSH
-ConfigDropbear
-ConfigStunnel
-ConfigProxy
-ConfigWebmin
-ConfigOpenVPN
-ConfigMenu
-ConfigSyscript
-ConfigNginxOvpn
-
-echo -e "[\e[32mInfo\e[0m] Finalizing installation process.."
 ln -fs /usr/share/zoneinfo/Asia/Kuala_Lumpur /etc/localtime
 sed -i '/\/bin\/false/d' /etc/shells
 sed -i '/\/usr\/sbin\/nologin/d' /etc/shells
@@ -853,69 +680,84 @@ echo '/usr/sbin/nologin' >> /etc/shells
 sleep 1
 ######
 
-clear
-clear
-clear
-bash /etc/profile.d/bonv.sh
-DARK-MSG
-echo -e ""
-echo -e "\e[38;5;46m=\e[0m\e[38;5;46m=\e[0m\e[38;5;47m S\e[0m\e[38;5;47mu\e[0m\e[38;5;48mc\e[0m\e[38;5;48m\e[0m\e[38;5;49mc\e[0m\e[38;5;49me\e[0m\e[38;5;50ms\e[0m\e[38;5;50ms\e[0m\e[38;5;51m I\e[0m\e[38;5;51mn\e[0m\e[38;5;50ms\e[0m\e[38;5;50mt\e[0m\e[38;5;49ma\e[0m\e[38;5;49ml\e[0m\e[38;5;48ml\e[0m\e[38;5;48ma\e[0m\e[38;5;47mt\e[0m\e[38;5;47mi\e[0m\e[38;5;46mo\e[0m\e[38;5;46mn \e[0m\e[38;5;47m=\e[0m\e[38;5;47m=\e[0m"
-echo -e ""
-echo -e "\e[92m Service Ports\e[0m\e[97m:\e[0m"
-echo -e "\e[92m OpenSSH\e[0m\e[97m: 22, 225\e[0m"
-echo -e "\e[92m Stunnel\e[0m\e[97m: 443, 444\e[0m"
-echo -e "\e[92m Dropbear\e[0m\e[97m: 445, 446\e[0m"
-echo -e "\e[92m Squid\e[0m\e[97m: 8000, 8181\e[0m"
-echo -e "\e[92m OpenVPN\e[0m\e[97m: 4463(TCP), 25222(UDP)\e[0m"
-echo -e "\e[92m OpenVPN EC\e[0m\e[97m: 25980(TCP), 25985(UDP)\e[0m"
-echo -e "\e[92m NGiNX\e[0m\e[97m: 88\e[0m"
-echo -e "\e[92m Webmin\e[0m\e[97m: 10000\e[0m"
-echo -e "\e[92m BadVPN-udpgw\e[0m\e[97m: 7300\e[0m"
-echo -e ""
-echo -e "\e[97m NEW! OHPServer builds\e[0m"
-echo -e "\e[97m (Good for Payload bugging and any related HTTP Experiments)\e[0m"
-echo -e "\e[92m OHP+Dropbear\e[0m\e[97m: 8085\e[0m"
-echo -e "\e[92m OHP+OpenSSH\e[0m\e[97m: 8086\e[0m"
-echo -e "\e[92m OHP+OpenVPN\e[0m\e[97m: 8087\e[0m"
-echo -e ""
-echo -e ""
-echo -e "\e[92m OpenVPN Configs Download Site\e[0m\e[97m:\e[0m"
-echo -e "\e[97m http://$(ip_address):88\e[0m"
-echo -e ""
-echo -e "\e[92m All OpenVPN Configs Archive\e[0m\e[97m:\e[0m"
-echo -e "\e[97m http://$(ip_address)/Configs.zip\e[0m"
-echo -e ""
-echo -e ""
-echo -e " * Script Premium By Darknet"
-echo -e " * OHPServer by lfasmpao"
-echo -e " ©DarknetScripts"
-echo -e ""
-echo -e ""
-rm -f DebianVPS-Installe*
-rm -rf /root/.bash_history && history -c && echo '' > /var/log/syslog
-}
+# install fail2ban
+apt -y install fail2ban
 
-source /etc/os-release
-ver=$VERSION_ID
+# Instal DDOS Flate
+if [ -d '/usr/local/ddos' ]; then
+	echo; echo; echo "Please un-install the previous version first"
+	exit 0
+else
+	mkdir /usr/local/ddos
+fi
+clear
+echo; echo 'Installing DOS-Deflate 0.6'; echo
+echo; echo -n 'Downloading source files...'
+wget -q -O /usr/local/ddos/ddos.conf http://www.inetbase.com/scripts/ddos/ddos.conf
+echo -n '.'
+wget -q -O /usr/local/ddos/LICENSE http://www.inetbase.com/scripts/ddos/LICENSE
+echo -n '.'
+wget -q -O /usr/local/ddos/ignore.ip.list http://www.inetbase.com/scripts/ddos/ignore.ip.list
+echo -n '.'
+wget -q -O /usr/local/ddos/ddos.sh http://www.inetbase.com/scripts/ddos/ddos.sh
+chmod 0755 /usr/local/ddos/ddos.sh
+cp -s /usr/local/ddos/ddos.sh /usr/local/sbin/ddos
+echo '...done'
+echo; echo -n 'Creating cron to run script every minute.....(Default setting)'
+/usr/local/ddos/ddos.sh --cron > /dev/null 2>&1
+echo '.....done'
+echo; echo 'Installation has completed.'
+echo 'Config file is at /usr/local/ddos/ddos.conf'
+echo 'Please send in your comments and/or suggestions to zaf@vsnl.com'
 
-case $1 in
- install)
- DARK-MSG
- InstallScript
- rm -f debku-*
+# blockir torrent
+iptables -A FORWARD -m string --string "get_peers" --algo bm -j DROP
+iptables -A FORWARD -m string --string "announce_peer" --algo bm -j DROP
+iptables -A FORWARD -m string --string "find_node" --algo bm -j DROP
+iptables -A FORWARD -m string --algo bm --string "BitTorrent" -j DROP
+iptables -A FORWARD -m string --algo bm --string "BitTorrent protocol" -j DROP
+iptables -A FORWARD -m string --algo bm --string "peer_id=" -j DROP
+iptables -A FORWARD -m string --algo bm --string ".torrent" -j DROP
+iptables -A FORWARD -m string --algo bm --string "announce.php?passkey=" -j DROP
+iptables -A FORWARD -m string --algo bm --string "torrent" -j DROP
+iptables -A FORWARD -m string --algo bm --string "announce" -j DROP
+iptables -A FORWARD -m string --algo bm --string "info_hash" -j DROP
+iptables-save > /etc/iptables.up.rules
+iptables-restore -t < /etc/iptables.up.rules
+netfilter-persistent save
+netfilter-persistent reload
+
+cat <<'badvpnEOF'> /tmp/install-badvpn.bash
+#!/bin/bash
+if [[ -e /usr/local/bin/badvpn-udpgw ]]; then
+ printf "%s\n" "BadVPN-udpgw already installed"
  exit 1
- ;;
- help|--help|-h)
- DARK-MSG
- echo -e " install = Install script"
- exit 1
- ;;
- *)
- DARK-MSG
- echo -e " Starting Installation"
- echo -e " CRTL + C if you wish to cancel it"
- sleep 5
- InstallScript
- exit 1
- ;;
-esac
+else
+ curl -4skL "https://github.com/ambrop72/badvpn/archive/4b7070d8973f99e7cfe65e27a808b3963e25efc3.zip" -o /tmp/badvpn.zip
+ unzip -qq /tmp/badvpn.zip -d /tmp && rm -f /tmp/badvpn.zip
+ cd /tmp/badvpn-4b7070d8973f99e7cfe65e27a808b3963e25efc3
+ cmake -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1 &> /dev/null
+ make install &> /dev/null
+ rm -rf /tmp/badvpn-4b7070d8973f99e7cfe65e27a808b3963e25efc3
+ cat <<'EOFudpgw' > /lib/systemd/system/badvpn-udpgw.service
+[Unit]
+Description=BadVPN UDP Gateway Server daemon
+Wants=network.target
+After=network.target
+[Service]
+ExecStart=/usr/local/bin/badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 4000 --max-connections-for-client 4000 --loglevel info
+Restart=always
+RestartSec=3
+[Install]
+WantedBy=multi-user.target
+EOFudpgw
+systemctl daemon-reload &>/dev/null
+systemctl restart badvpn-udpgw.service
+systemctl enable badvpn-udpgw.service
+fi
+badvpnEOF
+screen -S badvpninstall -dm bash -c "bash /tmp/install-badvpn.bash && rm -f /tmp/install-badvpn.bash"
+
+clear
+
+
