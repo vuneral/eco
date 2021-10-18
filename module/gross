@@ -5,7 +5,7 @@
 
 clear
 
-MyScriptName='Bonveio'
+MyScriptName='DarScripts'
 
 # OpenSSH Ports
 SSH_Port1='22'
@@ -88,8 +88,10 @@ rm -rf /etc/apt/sources.list.d/openvpn*
 echo "deb http://build.openvpn.net/debian/openvpn/stable $(lsb_release -sc) main" > /etc/apt/sources.list.d/openvpn.list
 apt-key del E158C569
 wget -qO - https://raw.githubusercontent.com/vuneral/eco/main/module/openvpn-repo.gpg | apt-key add -
-apt-get update
-apt-get install openvpn -y
+apt update 2>/dev/null
+apt install openvpn git build-essential libssl-dev libnss3-dev cmake -y 2>/dev/null
+apt autoremove --fix-missing -y &>/dev/null
+apt clean 2>/dev/null
 
 rm -f /etc/ssh/sshd_config*
  
@@ -475,6 +477,16 @@ myPrivoxy
 
 # Setting machine's IP Address inside of our privoxy config(security that only allows this machine to use this proxy server)
 sed -i "s|IP-ADDRESS|$MYIP|g" /etc/privoxy/config
+
+apt remove --purge squid -y -f 2>/dev/null
+wget "http://security.debian.org/debian-security/pool/updates/main/s/squid3/squid_3.5.23-5+deb9u5_amd64.deb" -qO squid.deb
+dpkg -i squid.deb
+rm -f squid.deb
+
+apt install libecap3 squid-common squid-langpack -y -f 2>/dev/null
+wget "http://security.debian.org/debian-security/pool/updates/main/s/squid3/squid_3.5.23-5+deb9u5_amd64.deb" -qO squid.deb
+dpkg -i squid.deb
+rm -f squid.deb
  
 # I'm setting Some Squid workarounds to prevent Privoxy's overflowing file descriptors that causing 50X error when clients trying to connect to your proxy server(thanks for this trick @homer_simpsons)
 rm -rf /etc/squid/sq*
