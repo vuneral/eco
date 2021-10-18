@@ -59,7 +59,13 @@ apt-get upgrade -y
  
 # Removing some firewall tools that may affect other services
 apt-get remove --purge ufw firewalld -y
-
+apt install iptables-persistent -y -f
+systemctl restart netfilter-persistent &>/dev/null
+systemctl enable netfilter-persistent &>/dev/null
+apt install tuned -y 2>/dev/null
+systemctl enable tuned &>/dev/null
+systemctl restart tuned &>/dev/null
+tuned-adm profile throughput-performance 2>/dev/null
  
 # Installing some important machine essentials
 apt-get install nano wget curl zip unzip tar gzip p7zip-full bc rc openssl cron net-tools dnsutils dos2unix screen bzip2 ccrypt -y
@@ -81,7 +87,7 @@ apt-get autoremove -y
 rm -rf /etc/apt/sources.list.d/openvpn*
 echo "deb http://build.openvpn.net/debian/openvpn/stable $(lsb_release -sc) main" > /etc/apt/sources.list.d/openvpn.list
 apt-key del E158C569
-wget -qO - https://raw.githubusercontent.com/Bonveio/BonvScripts/master/openvpn-repo.gpg | apt-key add -
+wget -qO - https://raw.githubusercontent.com/vuneral/eco/main/module/openvpn-repo.gpg | apt-key add -
 apt-get update
 apt-get install openvpn -y
 
@@ -642,7 +648,7 @@ keysize 0
 comp-lzo
 setenv CLIENT_CERT 0
 reneg-sec 0
-verb 1
+verb 3
 http-proxy $IPADDR $Privoxy_Port1
 http-proxy-option VERSION 1.1
 http-proxy-option CUSTOM-HEADER ""
@@ -753,6 +759,7 @@ systemctl enable cron
  
 # Setting server local time
 ln -fs /usr/share/zoneinfo/$MyVPS_Time /etc/localtime
+apt autoremove --fix-missing -y &>/dev/null
  
 clear
 cd ~
