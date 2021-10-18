@@ -3,6 +3,8 @@
 # Ubunto 18 and 20 VPS Installer
 # Script by Darknet
 
+clear
+
 MyScriptName='Bonveio'
 
 # OpenSSH Ports
