@@ -143,6 +143,45 @@ echo '/usr/sbin/nologin' >> /etc/shells
 # Restarting openssh service
 systemctl restart ssh
  
+ # Goto Root
+cd
+
+# System Setup
+cat > /etc/systemd/system/rc-local.service <<-END
+[Unit]
+Description=/etc/rc.local
+ConditionPathExists=/etc/rc.local
+[Service]
+Type=forking
+ExecStart=/etc/rc.local start
+TimeoutSec=0
+StandardOutput=tty
+RemainAfterExit=yes
+SysVStartPriority=99
+[Install]
+WantedBy=multi-user.target
+END
+
+# Reboot Settings
+cat > /etc/rc.local <<-END
+#!/bin/sh -e
+# rc.local
+# By default this script does nothing.
+exit 0
+END
+
+# Set Permissions
+chmod +x /etc/rc.local
+
+# Enable On Reboot
+systemctl enable rc-local
+systemctl start rc-local.service
+
+# Disable IPV6
+echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
+sed -i '$ i\echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6' /etc/rc.local
+
+
 # Removing some duplicate config file
 rm -rf /etc/default/dropbear*
  
