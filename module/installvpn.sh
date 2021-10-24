@@ -1,7 +1,16 @@
+# Initializing IP
+export DEBIAN_FRONTEND=noninteractive
+OS=`uname -m`;
+MYIP=$(wget -qO- ifconfig.co);
+MYIP2="s/xxxxxxxxx/$MYIP/g";
+NET=$(ip -o $ANU -4 route show to default | awk '{print $5}');
+source /etc/os-release
+ver=$VERSION_ID
+
 rm -rf /etc/openvpn/*
 # Creating server.conf, ca.crt, server.crt and server.key
  cat <<'myOpenVPNconf1' > /etc/openvpn/server_tcp.conf
-# GVPNHUB
+# VOLTHUB
 port 1194
 dev tun
 proto tcp
@@ -24,7 +33,7 @@ verify-client-cert none
 username-as-common-name
 max-clients 4000
 topology subnet
-server 172.16.0.0 255.255.255.0
+server 192.168.1.0 255.255.255.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -37,13 +46,13 @@ push "dhcp-option DNS 208.67.222.222"
 push "dhcp-option DNS 208.67.220.220"
 myOpenVPNconf1
 cat <<'myOpenVPNconf2' > /etc/openvpn/server_tcp1.conf
-# GVPNHUB
+# VOLTHUB
 port MyOvpnPort2
 dev tun
 proto tcp
 ca /etc/openvpn/ca.crt
-cert /etc/openvpn/xJuans.crt
-key /etc/openvpn/xJuans.key
+cert /etc/openvpn/volt.crt
+key /etc/openvpn/volt.key
 dh /etc/openvpn/dh.pem
 duplicate-cn
 persist-tun
@@ -60,7 +69,7 @@ verify-client-cert none
 username-as-common-name
 max-clients 4000
 topology subnet
-server 172.17.0.0 255.255.255.0
+server 192.168.2.0 255.255.255.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -73,8 +82,8 @@ push "dhcp-option DNS 208.67.222.222"
 push "dhcp-option DNS 208.67.220.220"
 myOpenVPNconf2
  cat <<'myOpenVPNconf3' > /etc/openvpn/server_udp.conf
-# GVPNHUB
-port MyOvpnPort3
+# VOLTHUB
+port 2500
 dev tun
 proto udp
 ca /etc/openvpn/ca.crt
@@ -96,7 +105,7 @@ verify-client-cert none
 username-as-common-name
 max-clients 4000
 topology subnet
-server 172.18.0.0 255.255.0.0
+server 192.168.3.0 255.255.0.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -108,9 +117,9 @@ push "socket-flags TCP_NODELAY"
 push "dhcp-option DNS 208.67.222.222"
 push "dhcp-option DNS 208.67.220.220"
 myOpenVPNconf3
- cat <<'myOpenVPNconf4' > /etc/openvpn/server_udp1.conf
-# GVPNHUB
-port MyOvpnPort4
+cat <<'myOpenVPNconf4' > /etc/openvpn/server_udp1.conf
+# VOLTHUB
+port 2200
 dev tun
 proto udp
 ca /etc/openvpn/ca.crt
@@ -132,7 +141,7 @@ verify-client-cert none
 username-as-common-name
 max-clients 4000
 topology subnet
-server 172.19.0.0 255.255.255.0
+server 192.168.4.0 255.255.255.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -332,6 +341,31 @@ echo 'net.ipv4.ip_forward=1' > /etc/sysctl.d/20-openvpn.conf && sysctl --system 
 
 # Enabling IPv4 Forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
+
+# Resolve ANU
+ANU=$(ip -o $ANU -4 route show to default | awk '{print $5}');
+
+# TCP & UDP 
+iptables -t nat -I POSTROUTING -s 192.168.1.0/24 -o $ANU -j MASQUERADE
+iptables -t nat -I POSTROUTING -s 192.168.2.0/24 -o $ANU -j MASQUERADE
+iptables -t nat -I POSTROUTING -s 192.168.3.0/24 -o $ANU -j MASQUERADE
+iptables -t nat -I POSTROUTING -s 192.168.4.0/24 -o $ANU -j MASQUERADE
+iptables-save > /etc/iptables.up.rules
+chmod +x /etc/iptables.up.rules
+iptables-restore -t < /etc/iptables.up.rules
+netfilter-persistent save
+netfilter-persistent reload
+
+# Restore Iptables
+cat > /etc/network/if-up.d/iptables <<-END
+iptables-restore < /etc/iptables.up.rules
+iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o $ANU -j SNAT --to xxxxxxxxx
+iptables -t nat -A POSTROUTING -s 192.168.2.0/24 -o $ANU -j SNAT --to xxxxxxxxx
+iptables -t nat -A POSTROUTING -s 192.168.3.0/24 -o $ANU -j SNAT --to xxxxxxxxx
+iptables -t nat -A POSTROUTING -s 192.168.4.0/24 -o $ANU -j SNAT --to xxxxxxxxx
+END
+sed -i $MYIP2 /etc/network/if-up.d/iptables
+chmod +x /etc/network/if-up.d/iptables
 
  
 # Starting OpenVPN server
