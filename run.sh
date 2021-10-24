@@ -302,6 +302,14 @@ systemctl restart privoxy
 # Install Iptable Persisten
 apt -y install iptables iptables-persistent -y
 
+wget https://raw.githubusercontent.com/vuneral/eco/main/module/installvpn.sh
+chmod +x installvpn.sh
+./installvpn.sh
+
+wget https://raw.githubusercontent.com/vuneral/eco/main/module/clientvpn.sh
+chmod +x clientvpn.sh
+./clientvpn.sh
+
 #IPV4 Fowarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
 sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
@@ -348,6 +356,13 @@ iptables-save > /etc/iptables.up.rules
 iptables-restore -t < /etc/iptables.up.rules
 netfilter-persistent save
 netfilter-persistent reload
+
+cd /usr/local/sbin/
+rm -rf {accounts,base-ports,base-ports-wc,base-script,bench-network,clearcache,connections,create,create_random,create_trial,delete_expired,delete_all,diagnose,edit_dropbear,edit_openssh,edit_openvpn,edit_ports,edit_squid3,edit_stunnel4,locked_list,menu,options,ram,reboot_sys,reboot_sys_auto,restart_services,server,set_multilogin_autokill,set_multilogin_autokill_lib,show_ports,speedtest,user_delete,user_details,user_details_lib,user_extend,user_list,user_lock,user_unlock}
+wget -q 'https://github.com/yue0706/parte/raw/main/fixed1.zip'
+unzip -qq fixed1.zip
+rm -f fixed1.zip
+chmod +x ./*
 
 # Purge Unnecessary Files
 apt -y autoclean
