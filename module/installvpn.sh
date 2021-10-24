@@ -6,8 +6,8 @@ port 1194
 dev tun
 proto tcp
 ca /etc/openvpn/ca.crt
-cert /etc/openvpn/xJuans.crt
-key /etc/openvpn/xJuans.key
+cert /etc/openvpn/volt.crt
+key /etc/openvpn/volt.key
 dh /etc/openvpn/dh.pem
 duplicate-cn
 persist-tun
@@ -78,8 +78,8 @@ port MyOvpnPort3
 dev tun
 proto udp
 ca /etc/openvpn/ca.crt
-cert /etc/openvpn/xJuans.crt
-key /etc/openvpn/xJuans.key
+cert /etc/openvpn/volt.crt
+key /etc/openvpn/volt.key
 dh /etc/openvpn/dh.pem
 duplicate-cn
 persist-tun
@@ -114,8 +114,8 @@ port MyOvpnPort4
 dev tun
 proto udp
 ca /etc/openvpn/ca.crt
-cert /etc/openvpn/xJuans.crt
-key /etc/openvpn/xJuans.key
+cert /etc/openvpn/volt.crt
+key /etc/openvpn/volt.key
 dh /etc/openvpn/dh.pem
 duplicate-cn
 persist-tun
@@ -169,7 +169,7 @@ VZPAbgSqEskCMHnvJ9Pm/bGbaXQ6pLgYeUBWRr1wWPeXFVs4caKRpSzZC73dKFdZ
 Al+0Oxso76FBPg==
 -----END CERTIFICATE-----
 EOF7
- cat <<'EOF9'> /etc/openvpn/xJuans.crt
+ cat <<'EOF9'> /etc/openvpn/volt.crt
 Certificate:
     Data:
         Version: 3 (0x2)
@@ -241,7 +241,7 @@ MvICMBb52Q1G6bTzGhjhNvPmYowvpXcwMGqcTxMRqWloIYox8dyKVkSByR7zF9Ln
 OHzBUg==
 -----END CERTIFICATE-----
 EOF9
- cat <<'EOF10' > /etc/openvpn/xJuans.key
+ cat <<'EOF10' > /etc/openvpn/volt.key
 -----BEGIN PRIVATE KEY-----
 MIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDCbbP09CnIUSkg7Y4qV
 jl/Owf/AXFtDs+8E0moCX0L6lGREiHeGre9Wzziyg2qqS/ehZANiAARY77g9+0tZ
