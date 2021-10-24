@@ -56,7 +56,7 @@ cat <<EOF160> /var/www/openvpn/volt-udp-1194.ovpn
 client
 dev tun
 proto udp
-remote $MYIP 1194
+remote $MYIP 2500
 remote-cert-tls server
 tun-mtu 1500
 mssfix 1450
@@ -75,7 +75,7 @@ cat <<EOF17> /var/www/openvpn/volt-udp-110.ovpn
 client
 dev tun
 proto udp
-remote $MYIP 110
+remote $MYIP 2200
 remote-cert-tls server
 tun-mtu 1500
 mssfix 1450
