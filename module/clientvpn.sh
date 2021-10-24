@@ -50,7 +50,7 @@ setenv CLIENT_CERT 1
 $(cat /etc/openvpn/ca.crt)
 </ca>
 EOF16
-cat <<EOF160> /var/www/openvpn/volt-udp-1194.ovpn
+cat <<EOF160> /var/www/openvpn/volt-udp-2500.ovpn
 # Volt Premium Script
 # Owner Cyberbossz
 client
@@ -69,7 +69,7 @@ setenv CLIENT_CERT 1
 $(cat /etc/openvpn/ca.crt)
 </ca>
 EOF160
-cat <<EOF17> /var/www/openvpn/volt-udp-110.ovpn
+cat <<EOF17> /var/www/openvpn/volt-udp-2200.ovpn
 # Volt Premium Script
 # Owner Cyberbossz
 client
