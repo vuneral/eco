@@ -1,6 +1,6 @@
 #!/bin/bash
-# Created by https://www.facebook.com/joash.singh.90
-# Script by Dope~kid
+# Created by volt
+# Script by Dani
 
 # Initializing IP
 export DEBIAN_FRONTEND=noninteractive
@@ -12,17 +12,26 @@ source /etc/os-release
 ver=$VERSION_ID
 
 # Stunnel Cert Info
-country=ID
-state=Africa
-locality=Durban
-organization=DopekidVPN
-organizationalunit=DopekidVPN
-commonname=DopekidVPN
-email=joashsingh14@gmail.com
+country=MY
+state=Malaysia
+locality=Kuala_Lumpur
+organization=VoltVpn
+organizationalunit=VoltVpn
+commonname=VoltVpn
+email=akuleader11@gmail.com
 
-# Password Setup
-wget -O /etc/pam.d/common-password "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Other/password"
-chmod +x /etc/pam.d/common-password
+sudo tee /etc/apt/sources.list.d/pritunl.list << EOF
+deb http://repo.pritunl.com/stable/apt buster main
+EOF
+
+sudo apt-get install dirmngr
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv 7568D9BB55FF9E5287D586017AE645C0CF8E292A
+sudo apt-get update
+sudo apt-get install pritunl-client-electron
+
+# My workaround code to remove `BAD Password error` from passwd command, it will fix password-related error on their ssh accounts.
+sed -i '/password\s*requisite\s*pam_cracklib.s.*/d' /etc/pam.d/common-password
+sed -i 's/use_authtok //g' /etc/pam.d/common-password
 
 # Goto Root
 cd
@@ -62,12 +71,6 @@ systemctl start rc-local.service
 echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
 sed -i '$ i\echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6' /etc/rc.local
 
-# Set Repo
-sh -c 'echo "deb http://download.webmin.com/download/repository sarge contrib" > /etc/apt/sources.list.d/webmin.list'
-apt install gnupg gnupg1 gnupg2 -y
-wget http://www.webmin.com/jcameron-key.asc
-apt-key add jcameron-key.asc
-
 # Update
 apt update -y
 apt upgrade -y
@@ -80,11 +83,41 @@ apt -y install wget curl
 apt-get -y install libio-pty-perl libauthen-pam-perl apt-show-versions libnet-ssleay-perl
 
 # Set System Time
-ln -fs /usr/share/zoneinfo/Africa/Johannesburg /etc/localtime
+ln -fs /usr/share/zoneinfo/Asia/Kuala_Lumpur /etc/localtime
 
-# Set Sshd
-sed -i 's/AcceptEnv/#AcceptEnv/g' /etc/ssh/sshd_config
+# Removing some duplicated sshd server configs
+rm -f /etc/ssh/sshd_config*
+ 
+# Creating a SSH server config using cat eof tricks
+cat <<'MySSHConfig' > /etc/ssh/sshd_config
+# My OpenSSH Server config
+Port 22
+Port 220
+AddressFamily inet
+ListenAddress 0.0.0.0
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+PermitRootLogin yes
+MaxSessions 1024
+PubkeyAuthentication yes
+PasswordAuthentication yes
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+UsePAM yes
+X11Forwarding yes
+PrintMotd no
+ClientAliveInterval 240
+ClientAliveCountMax 2
+UseDNS no
+Banner /etc/banner
+AcceptEnv LANG LC_*
+Subsystem   sftp  /usr/lib/openssh/sftp-server
+MySSHConfig
 
+# Restarting openssh service
+systemctl restart ssh
+ 
 # NeoFetch
 apt-get --reinstall --fix-missing install -y bzip2 gzip coreutils wget screen rsyslog iftop htop net-tools zip unzip wget net-tools curl nano sed screen gnupg gnupg1 bc apt-transport-https build-essential dirmngr libxml-parser-perl neofetch git
 rm .profile
@@ -99,11 +132,10 @@ if [ $(cat /etc/debian_version) == '10.9' ]; then
   sed -i 's/listen = \/run\/php\/php7.3-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php/7.3/fpm/pool.d/www.conf
   rm /etc/nginx/sites-enabled/default
   rm /etc/nginx/sites-available/default
-  wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Other/nginx.conf"
-  wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Other/vps.conf"
-  wget -O /etc/nginx/conf.d/monitoring.conf "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Other/monitoring.conf"
+  wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/vuneral/eco/main/module/nginx.conf"
+  wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/vuneral/eco/main/module/vps.conf"
   mkdir -p /home/vps/public_html
-  wget -O /home/vps/public_html/index.php "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Panel/index.php"
+  wget -O /home/vps/public_html/index.php "https://raw.githubusercontent.com/vuneral/eco/main/module/index.php"
   service php7.3-fpm restart
   service nginx restart
 elif [ $(cat /etc/debian_version) == '9.13' ]; then
@@ -114,38 +146,65 @@ elif [ $(cat /etc/debian_version) == '9.13' ]; then
   sed -i 's/listen = \/run\/php\/php7.0-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php/7.0/fpm/pool.d/www.conf
   rm /etc/nginx/sites-enabled/default
   rm /etc/nginx/sites-available/default
-  wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Other/nginx.conf"
-  wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Other/vps.conf"
-  wget -O /etc/nginx/conf.d/monitoring.conf "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Other/monitoring.conf"
+  wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/vuneral/eco/main/module/nginx.conf"
+  wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/vuneral/eco/main/module/vps.conf"
   mkdir -p /home/vps/public_html
-  wget -O /home/vps/public_html/index.php "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Panel/index.php"
+  wget -O /home/vps/public_html/index.php "https://raw.githubusercontent.com/vuneral/eco/main/module/index.php"
   service php7.0-fpm restart
   service nginx restart
 fi
 
 # Install Badvpn
 cd
-wget -O /usr/bin/badvpn-udpgw "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Other/badvpn-udpgw64"
-chmod +x /usr/bin/badvpn-udpgw
-sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 500' /etc/rc.local
-sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 500' /etc/rc.local
-sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 500' /etc/rc.local
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 500
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 500
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 500
-
-# Setup SSH
-sed -i 's/#Port 22/Port  22/g' /etc/ssh/sshd_config
-/etc/init.d/ssh restart
+cat <<'badvpnEOF'> /tmp/install-badvpn.bash
+#!/bin/bash
+if [[ -e /usr/local/bin/badvpn-udpgw ]]; then
+ printf "%s\n" "BadVPN-udpgw already installed"
+ exit 1
+else
+ curl -4skL "https://github.com/ambrop72/badvpn/archive/4b7070d8973f99e7cfe65e27a808b3963e25efc3.zip" -o /tmp/badvpn.zip
+ unzip -qq /tmp/badvpn.zip -d /tmp && rm -f /tmp/badvpn.zip
+ cd /tmp/badvpn-4b7070d8973f99e7cfe65e27a808b3963e25efc3
+ cmake -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1 &> /dev/null
+ make install &> /dev/null
+ rm -rf /tmp/badvpn-4b7070d8973f99e7cfe65e27a808b3963e25efc3
+ cat <<'EOFudpgw' > /lib/systemd/system/badvpn-udpgw.service
+[Unit]
+Description=BadVPN UDP Gateway Server daemon
+Wants=network.target
+After=network.target
+[Service]
+ExecStart=/usr/local/bin/badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 4000 --max-connections-for-client 4000 --loglevel info
+Restart=always
+RestartSec=3
+[Install]
+WantedBy=multi-user.target
+EOFudpgw
+systemctl daemon-reload &>/dev/null
+systemctl restart badvpn-udpgw.service &>/dev/null
+systemctl enable badvpn-udpgw.service &>/dev/null
+fi
+badvpnEOF
+screen -S badvpninstall -dm bash -c "bash /tmp/install-badvpn.bash && rm -f /tmp/install-badvpn.bash"
 
 # Install Dropbear
 apt -y install dropbear
-sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=143/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 109"/g' /etc/default/dropbear
-echo "/bin/false" >> /etc/shells
-echo "/usr/sbin/nologin" >> /etc/shells
-/etc/init.d/dropbear restart
+# Removing some duplicate config file
+rm -rf /etc/default/dropbear*
+ 
+# creating dropbear config using cat eof tricks
+cat <<'MyDropbear' > /etc/default/dropbear
+# My Dropbear Config
+NO_START=0
+DROPBEAR_PORT=PORT01
+DROPBEAR_EXTRA_ARGS="-p PORT02"
+DROPBEAR_BANNER="/etc/banner"
+DROPBEAR_RSAKEY="/etc/dropbear/dropbear_rsa_host_key"
+DROPBEAR_DSSKEY="/etc/dropbear/dropbear_dss_host_key"
+DROPBEAR_ECDSAKEY="/etc/dropbear/dropbear_ecdsa_host_key"
+DROPBEAR_RECEIVE_WINDOW=65536
+MyDropbear
+systemctl restart dropbear
 
 # Install Squid Proxy
 cd
@@ -173,28 +232,15 @@ http_access deny manager
 http_access allow localhost
 http_access deny all
 http_port 8080
-http_port 3128
+http_port 8181
 coredump_dir /var/spool/squid3
 refresh_pattern ^ftp: 1440 20% 10080
 refresh_pattern ^gopher: 1440 0% 1440
 refresh_pattern -i (/cgi-bin/|\?) 0 0% 0
 refresh_pattern . 0 20% 4320
-visible_hostname Dopekid
+visible_hostname Darknet
 END
 sed -i $MYIP2 /etc/squid/squid.conf
-
-# Install Webmin
-wget "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Other/webmin_1.801_all.deb"
-dpkg --install webmin_1.801_all.deb;
-apt-get -y -f install;
-sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
-rm /root/webmin_1.801_all.deb
-/etc/init.d/webmin restart
-
-# Webmin Configuration
-sed -i '$ i\dope: acl adsl-client ajaxterm apache at backup-config bacula-backup bandwidth bind8 burner change-user cluster-copy cluster-cron cluster-passwd cluster-shell cluster-software cluster-useradmin cluster-usermin cluster-webmin cpan cron custom dfsadmin dhcpd dovecot exim exports fail2ban fdisk fetchmail file filemin filter firewall firewalld fsdump grub heartbeat htaccess-htpasswd idmapd inetd init inittab ipfilter ipfw ipsec iscsi-client iscsi-server iscsi-target iscsi-tgtd jabber krb5 ldap-client ldap-server ldap-useradmin logrotate lpadmin lvm mailboxes mailcap man mon mount mysql net nis openslp package-updates pam pap passwd phpini postfix postgresql ppp-client pptp-client pptp-server proc procmail proftpd qmailadmin quota raid samba sarg sendmail servers shell shorewall shorewall6 smart-status smf software spam squid sshd status stunnel syslog-ng syslog system-status tcpwrappers telnet time tunnel updown useradmin usermin vgetty webalizer webmin webmincron webminlog wuftpd xinetd' /etc/webmin/webmin.acl
-sed -i '$ i\dope:x:0' /etc/webmin/miniserv.users
-/usr/share/webmin/changepass.pl /etc/webmin dope 12345
 
 # Install Stunnel
 apt -y install stunnel4
@@ -205,7 +251,7 @@ socket = a:SO_REUSEADDR=1
 socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
 [dropbear]
-accept = 442
+accept = 444
 connect = 127.0.0.1:109
 END
 
@@ -219,85 +265,52 @@ cat key.pem cert.pem >> /etc/stunnel/stunnel.pem
 sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
 /etc/init.d/stunnel4 restart
 
-# Install OpenVPN
-apt -y install openvpn iptables iptables-persistent -y
-wget -O /etc/openvpn/openvpn.zip "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Other/openvpn.zip"
-cd /etc/openvpn/
-unzip openvpn.zip
-rm -f openvpn.zip
-cd
-mkdir -p /usr/lib/openvpn/
-cp /usr/lib/x86_64-linux-gnu/openvpn/plugins/openvpn-plugin-auth-pam.so /usr/lib/openvpn/openvpn-plugin-auth-pam.so
+apt install privoxy -y
+rm -f /etc/privoxy/config
+# Creating Privoxy server config using cat eof tricks
+cat <<'myPrivoxy' > /etc/privoxy/config
+# My Privoxy Server Config
+user-manual /usr/share/doc/privoxy/user-manual
+confdir /etc/privoxy
+logdir /var/log/privoxy
+filterfile default.filter
+logfile logfile
+listen-address 0.0.0.0:25800
+toggle 1
+enable-remote-toggle 0
+enable-remote-http-toggle 0
+enable-edit-actions 0
+enforce-blocks 0
+buffer-limit 4096
+enable-proxy-authentication-forwarding 1
+forwarded-connect-retries 1
+accept-intercepted-requests 1
+allow-cgi-request-crunching 1
+split-large-forms 0
+keep-alive-timeout 5
+tolerate-pipelining 1
+socket-timeout 300
+permit-access 0.0.0.0/0 xxxxxxxxx
+myPrivoxy
 
-# Autostart All Openvpn Config
-sed -i 's/#AUTOSTART="all"/AUTOSTART="all"/g' /etc/default/openvpn
+sed -i $MYIP2 /etc/privoxy/config
 
-# OpenVPN IPV4 Fowarding
+systemctl start privoxy
+systemctl enable privoxy
+systemctl restart privoxy
+
+# Install Iptable Persisten
+apt -y install iptables iptables-persistent -y
+
+#IPV4 Fowarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
 sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
-
-# Resolve ANU
-ANU=$(ip -o $ANU -4 route show to default | awk '{print $5}');
-
-# TCP & UDP 
-iptables -t nat -I POSTROUTING -s 10.6.0.0/24 -o $ANU -j MASQUERADE
-iptables -t nat -I POSTROUTING -s 10.7.0.0/24 -o $ANU -j MASQUERADE
-iptables-save > /etc/iptables.up.rules
-chmod +x /etc/iptables.up.rules
-iptables-restore -t < /etc/iptables.up.rules
-netfilter-persistent save
-netfilter-persistent reload
-
-# Restore Iptables
-cat > /etc/network/if-up.d/iptables <<-END
-iptables-restore < /etc/iptables.up.rules
-iptables -t nat -A POSTROUTING -s 10.6.0.0/24 -o $ANU -j SNAT --to xxxxxxxxx
-iptables -t nat -A POSTROUTING -s 10.7.0.0/24 -o $ANU -j SNAT --to xxxxxxxxx
-END
-sed -i $MYIP2 /etc/network/if-up.d/iptables
-chmod +x /etc/network/if-up.d/iptables
-
-# Enable Openvpn
-systemctl enable openvpn
-systemctl start openvpn
-/etc/init.d/openvpn restart
-/etc/init.d/openvpn status
-
-# Openvpn Config
-cat > /home/vps/public_html/Dopekid.ovpn <<-END
-# OpenVPN Configuration By Dopekid
-client
-dev tun
-proto tcp
-remote $MYIP 1194
-http-proxy $MYIP 8080
-remote-cert-tls server
-resolv-retry infinite
-nobind
-tun-mtu 1500
-mssfix 1500
-persist-key
-persist-tun
-ping-restart 0
-ping-timer-rem
-reneg-sec 0
-comp-lzo
-auth SHA512
-auth-user-pass
-auth-nocache
-cipher AES-256-CBC
-verb 3
-pull
-END
-echo '<ca>' >> /home/vps/public_html/Dopekid.ovpn
-cat /etc/openvpn/keys/ca.crt >> /home/vps/public_html/Dopekid.ovpn
-echo '</ca>' >> /home/vps/public_html/Dopekid.ovpn
 
 # Install Fail2ban
 apt -y install fail2ban
 
 # SSH/Dropbear Banner
-wget -O /etc/banner "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Other/banner"
+wget -O /etc/banner "https://raw.githubusercontent.com/vuneral/eco/main/module/banner"
 sed -i 's@#Banner none@Banner /etc/banner@g' /etc/ssh/sshd_config
 sed -i 's@DROPBEAR_BANNER=""@DROPBEAR_BANNER="/etc/banner"@g' /etc/default/dropbear
 
@@ -313,22 +326,11 @@ cd ddos-deflate-master
 ./install.sh
 rm -rf /root/ddos-deflate-master.zip
 
-# OpenVPN Monitoring
-apt-get install -y gcc libgeoip-dev python-virtualenv python-dev geoip-database-extra uwsgi uwsgi-plugin-python
-wget -O /srv/openvpn-monitor.tar "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Panel/openvpn-monitor.tar"
-cd /srv
-tar xf openvpn-monitor.tar
-cd openvpn-monitor
-virtualenv .
-. bin/activate
-pip install -r requirements.txt
-wget -O /etc/uwsgi/apps-available/openvpn-monitor.ini "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Panel/openvpn-monitor.ini"
-ln -s /etc/uwsgi/apps-available/openvpn-monitor.ini /etc/uwsgi/apps-enabled/
-
-# GeoIP For OpenVPN Monitor
-mkdir -p /var/lib/GeoIP
-wget -O /var/lib/GeoIP/GeoLite2-City.mmdb.gz "https://raw.githubusercontent.com/dopekid30/AutoScriptDebian10/main/Resources/Panel/GeoLite2-City.mmdb.gz"
-gzip -d /var/lib/GeoIP/GeoLite2-City.mmdb.gz
+# Some command to identify null shells when you tunnel through SSH or using Stunnel
+sed -i '/\/bin\/false/d' /etc/shells
+sed -i '/\/usr\/sbin\/nologin/d' /etc/shells
+echo '/bin/false' >> /etc/shells
+echo '/usr/sbin/nologin' >> /etc/shells
 
 # Block Torrents
 iptables -A FORWARD -m string --string "get_peers" --algo bm -j DROP
@@ -357,3 +359,6 @@ apt-get -y remove sendmail*
 
 # Stop Nginx Port 80
 service nginx stop
+
+rm -f run.sh
+clear
