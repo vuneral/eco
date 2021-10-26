@@ -181,10 +181,10 @@ chkconfig vnstat on
 chown -R vnstat:vnstat /var/lib/vnstat
 
 # setting banner
-rm /etc/issue.net
-wget -O /etc/issue.net "https://raw.githubusercontent.com/vuneral/eco/main/module/banner"
+rm /etc/banner
+wget -O /etc/banner "https://raw.githubusercontent.com/vuneral/eco/main/module/banner"
 sed -i 's@#Banner@Banner@g' /etc/ssh/sshd_config
-sed -i 's@DROPBEAR_BANNER=""@DROPBEAR_BANNER="/etc/issue.net"@g' /etc/default/dropbear
+sed -i 's@DROPBEAR_BANNER=""@DROPBEAR_BANNER="/etc/banner"@g' /etc/default/dropbear
 service ssh restart
 service dropbear restart
 
