@@ -76,8 +76,6 @@ sed -i 's/use_authtok //g' /etc/pam.d/common-password
 export DEBIAN_FRONTEND=noninteractive
 MYIP=`ifconfig eth0 | awk 'NR==2 {print $2}'`
 MYIP2="s/xxxxxxxxx/$MYIP/g";
-source /etc/os-release
-ver=$VERSION_ID
 
 # set time UMT +8
 ln -fs /usr/share/zoneinfo/Asia/Kuala_Lumpur /etc/localtime
@@ -118,7 +116,6 @@ systemctl start rc-local.service
 
 sed -i '$ i\echo "nameserver 208.67.222.222" > /etc/resolv.conf' /etc/rc.local
 sed -i '$ i\echo "nameserver 208.67.220.220" >> /etc/resolv.conf' /etc/rc.local
-sed -i '$ i\iptables-restore < /etc/iptables.up.rules' /etc/rc.local
 
 # disable ipv6
 echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
@@ -139,19 +136,6 @@ sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
 sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=843/g' /etc/default/dropbear
 sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 844 "/g' /etc/default/dropbear
 
-# update dropbear 2020
-wget https://matt.ucc.asn.au/dropbear/releases/dropbear-2020.81.tar.bz2
-bzip2 -cd dropbear-2020.81.tar.bz2 | tar xvf -
-cd dropbear-2020.81
-./configure
-make && make install
-mv /usr/sbin/dropbear /usr/sbin/dropbear1
-ln /usr/local/sbin/dropbear /usr/sbin/dropbear
-echo "/bin/false" >> /etc/shells
-echo "/usr/sbin/nologin" >> /etc/shells
-/etc/init.d/dropbear restart
-cd
-
 # install squid3
 cat > /etc/squid/squid.conf <<-END
 acl localhost src 127.0.0.1/32 ::1
@@ -168,7 +152,7 @@ acl Safe_ports port 488
 acl Safe_ports port 591
 acl Safe_ports port 777
 acl CONNECT method CONNECT
-acl SSH dst xxxxxxxxx/32
+acl SSH dst xxxxxxxxx
 http_access allow SSH
 http_access allow manager localhost
 http_access deny manager
