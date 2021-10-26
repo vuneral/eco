@@ -178,7 +178,6 @@ chkconfig vnstat on
 chown -R vnstat:vnstat /var/lib/vnstat
 
 # setting banner
-rm /etc/banner
 wget -O /etc/banner "https://raw.githubusercontent.com/vuneral/eco/main/module/banner"
 sed -i 's@#Banner@Banner@g' /etc/ssh/sshd_config
 sed -i 's@DROPBEAR_BANNER=""@DROPBEAR_BANNER="/etc/banner"@g' /etc/default/dropbear
@@ -216,9 +215,9 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4080
+max-clients 4000
 topology subnet
-server 192.168.1.0 255.255.0.0
+server 192.168.1.0 255.255.240.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -253,9 +252,9 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4080
+max-clients 4000
 topology subnet
-server 192.168.2.0 255.255.0.0
+server 192.168.2.0 255.255.240.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -290,9 +289,9 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4080
+max-clients 4000
 topology subnet
-server 192.168.3.0 255.255.0.0
+server 192.168.3.0 255.255.240.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -327,9 +326,9 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4080
+max-clients 4000
 topology subnet
-server 192.168.4.0 255.255.0.0
+server 192.168.4.0 255.255.240.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
