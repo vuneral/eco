@@ -55,9 +55,6 @@ apt dist-upgrade -y
 # install wget and curl
 apt -y install wget curl
 sudo apt-get install pritunl-client-electron -y
-apt install iptables-persistent -y -f
-systemctl restart netfilter-persistent 
-systemctl enable netfilter-persistent
 apt install tuned -y 
 systemctl enable tuned 
 systemctl restart tuned 
@@ -68,8 +65,6 @@ apt-get remove --purge ufw firewalld -y
 #Install Component
 apt-get install nano wget curl zip unzip tar gzip p7zip-full bc rc tcpdump dsniff jq openssl cron net-tools dnsutils dos2unix screen bzip2 ccrypt -y
 apt-get install dropbear stunnel4 privoxy python ca-certificates nginx squid grepcidr ruby apt-transport-https lsb-release -y
-apt install perl libnet-ssleay-perl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python dbus libxml-parser-perl shared-mime-info -y
-apt install git build-essential libssl-dev libnss3-dev cmake -y
 
 # Installing a text colorizer
 gem install lolcat
@@ -136,7 +131,7 @@ sed -i 's/AcceptEnv/#AcceptEnv/g' /etc/ssh/sshd_config
 # install
 apt-get --reinstall --fix-missing install -y bzip2 gzip coreutils wget screen rsyslog iftop htop net-tools zip unzip wget net-tools curl nano sed screen gnupg gnupg1 bc apt-transport-https build-essential dirmngr libxml-parser-perl neofetch git
 echo "clear" >> .profile
-echo "echo neofetch" >> .profile
+echo "neofetch" >> .profile
 echo "echo ================" >> .profile
 echo "echo Script By VoltVpn" >> .profile
 echo "echo ================" >> .profile
@@ -219,7 +214,7 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4080
+max-clients 4000
 topology subnet
 server 192.168.1.0 255.255.240.0
 push "redirect-gateway def1"
@@ -256,7 +251,7 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4080
+max-clients 4000
 topology subnet
 server 192.168.2.0 255.255.240.0
 push "redirect-gateway def1"
@@ -293,7 +288,7 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4080
+max-clients 4000
 topology subnet
 server 192.168.3.0 255.255.240.0
 push "redirect-gateway def1"
@@ -330,7 +325,7 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4080
+max-clients 4000
 topology subnet
 server 192.168.4.0 255.255.240.0
 push "redirect-gateway def1"
@@ -555,24 +550,39 @@ fi
 # Allow IPv4 Forwarding
 echo 'net.ipv4.ip_forward=1' > /etc/sysctl.d/99-openvpn.conf && sysctl --system &> /dev/null && echo 1 > /proc/sys/net/ipv4/ip_forward
 
-# Configure Stunnel
-sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
-openssl req -new -newkey rsa:2048 -days 9999 -nodes -x509 -sha256 -subj '/CN=127.0.0.1/O=localhost/C=MY' -keyout /etc/stunnel/stunnel.pem -out /etc/stunnel/stunnel.pem
-cat > /etc/stunnel/stunnel.conf <<-END
-sslVersion = all
-pid = /stunnel.pid
+# Creating stunnel startup config using cat eof tricks
+cat <<'MyStunnelD' > /etc/default/stunnel4
+# My Stunnel Config
+ENABLED=1
+FILES="/etc/stunnel/*.conf"
+OPTIONS=""
+BANNER="/etc/banner"
+PPP_RESTART=0
+# RLIMITS="-n 4096 -d unlimited"
+RLIMITS=""
+MyStunnelD
+
+# Removing all stunnel folder contents
+rm -rf /etc/stunnel/*
+ 
+# Creating stunnel certifcate using openssl
+openssl req -new -x509 -days 9999 -nodes -subj "/C=MY/ST=NCR/L=Kuala_Lumpur/O=VoltNet/OU=VoltNet/CN=VoltNet" -out /etc/stunnel/stunnel.pem -keyout /etc/stunnel/stunnel.pem &> /dev/null
+# Creating stunnel server config
+cat <<'MyStunnelC' > /etc/stunnel/stunnel.conf
+# My Stunnel Config
+pid = /var/run/stunnel.pid
+cert = /etc/stunnel/stunnel.pem
+client = no
 socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
-client = no
-[openvpn]
-accept = 4433
-connect = 127.0.0.1:1194
-cert = /etc/stunnel/stunnel.pem
+TIMEOUTclose = 0
 [dropbear]
 accept = 444
-connect = 127.0.0.1:109
-cert = /etc/stunnel/stunnel.pem
-END
+connect = 127.0.0.1:843
+[openssh]
+accept = 4433
+connect = 127.0.0.1:110
+MyStunnelC
 
 # set ipv4 forward
 echo 1 > /proc/sys/net/ipv4/ip_forward
@@ -589,8 +599,6 @@ iptables -t nat -I POSTROUTING -s 192.168.4.0/24 -o $ANU -j MASQUERADE
 iptables-save > /etc/iptables.up.rules
 chmod +x /etc/iptables.up.rules
 iptables-restore -t < /etc/iptables.up.rules
-netfilter-persistent save
-netfilter-persistent reload
 
 # Starting OpenVPN server
 systemctl start openvpn@server_tcp
@@ -606,80 +614,16 @@ systemctl restart openvpn@server_tcp1
 systemctl restart openvpn@server_udp
 systemctl restart openvpn@server_udp1
 
-if [[ ! -e /etc/ohpserver ]]; then
- mkdir /etc/ohpserver
- else
- rm -rf /etc/ohpserver/*
-fi
-curl -4skL "https://github.com/lfasmpao/open-http-puncher/releases/download/0.1/ohpserver-linux32.zip" -o /etc/ohpserver/ohp.zip
-unzip -qq /etc/ohpserver/ohp.zip -d /etc/ohpserver
-rm -rf /etc/ohpserver/ohp.zip
-chmod +x /etc/ohpserver/ohpserver
-
-cat <<'Ohp1' > /etc/ohpserver/run
-#!/bin/bash
-# OHPServer startup script
-/etc/ohpserver/ohpserver -port 8085 -proxy 127.0.0.1:25800 -tunnel 127.0.0.1:843 > /etc/ohpserver/dropbear.log &
-/etc/ohpserver/ohpserver -port 8086 -proxy 127.0.0.1:25800 -tunnel 127.0.0.1:225 > /etc/ohpserver/openssh.log &
-/etc/ohpserver/ohpserver -port 8087 -proxy 127.0.0.1:25800 -tunnel 127.0.0.1:110 > /etc/ohpserver/openvpn.log &
-Ohp1
-chmod +x /etc/ohpserver/run
-
-cat <<'Ohp2' > /etc/ohpserver/stop
-#!/bin/bash
-# OHPServer stop script
-lsof -t -i tcp:8085 -s tcp:listen | xargs kill 2>/dev/null ### Dropbear
-lsof -t -i tcp:8086 -s tcp:listen | xargs kill 2>/dev/null ### OpenSSH
-lsof -t -i tcp:8087 -s tcp:listen | xargs kill 2>/dev/null ### OpenVPN TCP RSA
-Ohp2
-chmod +x /etc/ohpserver/stop
-
-cat <<'EOFohp' > /lib/systemd/system/ohpserver.service
-[Unit]
-Description=OpenHTTP Puncher Server
-Wants=network.target
-After=network.target
-[Service]
-ExecStart=/bin/bash /etc/ohpserver/run 2>/dev/null
-ExecStop=/bin/bash /etc/ohpserver/stop 2>/dev/null
-Restart=always
-RestartSec=3
-[Install]
-WantedBy=multi-user.target
-EOFohp
-systemctl daemon-reload
-systemctl restart ohpserver.service
-systemctl enable ohpserver.service
-
 cd
 rm /etc/nginx/sites-enabled/default
 rm /etc/nginx/sites-available/default
 wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/vuneral/eco/main/module/nginx.conf"
-# Creating nginx config for our ovpn config downloads webserver
-cat <<'myNginxC' > /etc/nginx/conf.d/sl-config.conf
-# My OpenVPN Config Download Directory
-server {
-  listen       88;
-  server_name  127.0.0.1 localhost;
-  access_log /var/log/nginx/vps-access.log;
-  error_log /var/log/nginx/vps-error.log error;
-  root   /var/www/openvpn;
-
-  location / {
-    index  index.html index.htm index.php;
-    try_files $uri $uri/ /index.php?$args;
-  }
-
-  location ~ \.php$ {
-    include /etc/nginx/fastcgi_params;
-    fastcgi_pass  127.0.0.1:9000;
-    fastcgi_index index.php;
-    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-  }
-}
-myNginxC
-mkdir -p /var/www/openvpn
+mkdir -p /var/www/openvpn/index.html
 echo "<pre>Setup by VoltVpn</pre>" > /var/www/openvpn/index.html
+wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/vuneral/eco/main/module/vps.conf"
+/etc/init.d/nginx restart
+
+mkdir -p /var/www/openvpn
 
 # Now creating all of our OpenVPN Configs 
 cat <<EOF152> /var/www/openvpn/tcp-01.ovpn
@@ -834,8 +778,6 @@ iptables -A FORWARD -m string --algo bm --string "announce" -j DROP
 iptables -A FORWARD -m string --algo bm --string "info_hash" -j DROP
 iptables-save > /etc/iptables.up.rules
 iptables-restore -t < /etc/iptables.up.rules
-netfilter-persistent save
-netfilter-persistent reload
 
 # xml parser
 cd
@@ -852,7 +794,7 @@ apt -y autoremove
 
 # finishing
 cd
-chown -R www-data:www-data /home/vps/public_html
+chown -R www-data:www-data /var/www/openvpn/index.html
 /etc/init.d/nginx restart
 /etc/init.d/openvpn restart
 /etc/init.d/cron restart
