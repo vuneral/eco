@@ -60,7 +60,7 @@ sudo apt-get install pritunl-client-electron -y
 apt-get remove --purge ufw firewalld -y
 #Install Component
 apt-get install nano wget curl zip unzip tar gzip p7zip-full bc rc openssl cron net-tools dnsutils dos2unix screen bzip2 ccrypt -y
-apt-get install dropbear stunnel4 privoxy ca-certificates nginx ruby apt-transport-https lsb-release squid3 -y
+apt-get install dropbear stunnel4 privoxy ca-certificates nginx squid ruby apt-transport-https lsb-release -y
 
 # Installing a text colorizer
 gem install lolcat
@@ -136,38 +136,37 @@ sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
 sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=843/g' /etc/default/dropbear
 sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 844 "/g' /etc/default/dropbear
 
+if [[ "$(command -v squid)" ]]; then
+ if [[ "$(squid -v | grep -Ec '(V|v)ersion\s3.5.23')" -lt 1 ]]; then
+  apt remove --purge squid -y -f 2>/dev/null
+  wget "http://security.debian.org/debian-security/pool/updates/main/s/squid3/squid_3.5.23-5+deb9u7_amd64.deb" -qO squid.deb
+  dpkg -i squid.deb
+  rm -f squid.deb
+ else
+  echo -e "Squid v3.5.23 already installed"
+ fi
+else
+ apt install libecap3 squid-common squid-langpack -y -f 2>/dev/null
+ wget "http://security.debian.org/debian-security/pool/updates/main/s/squid3/squid_3.5.23-5+deb9u7_amd64.deb" -qO squid.deb
+ dpkg -i squid.deb
+ rm -f squid.deb
+fi
+
 # install squid3
-cat > /etc/squid/squid.conf <<-END
-acl localhost src 127.0.0.1/32 ::1
-acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
-acl SSL_ports port 443
-acl Safe_ports port 80
-acl Safe_ports port 21
-acl Safe_ports port 443
-acl Safe_ports port 70
-acl Safe_ports port 210
-acl Safe_ports port 1025-65535
-acl Safe_ports port 280
-acl Safe_ports port 488
-acl Safe_ports port 591
-acl Safe_ports port 777
-acl CONNECT method CONNECT
-acl SSH dst xxxxxxxxx
-http_access allow SSH
-http_access allow manager localhost
-http_access deny manager
-http_access allow localhost
-http_access deny all
-http_port 8000
-http_port 8181
-coredump_dir /var/spool/squid3
+cat <<mySquid > /etc/squid/squid.conf
+acl VPN dst $(wget -4qO- http://ipinfo.io/ip)/32
+http_access allow VPN
+http_access deny all 
+http_port 0.0.0.0:8000
+http_port 0.0.0.0:8181
+coredump_dir /var/spool/squid
+dns_nameservers 8.8.8.8 8.8.4.4
 refresh_pattern ^ftp: 1440 20% 10080
 refresh_pattern ^gopher: 1440 0% 1440
 refresh_pattern -i (/cgi-bin/|\?) 0 0% 0
 refresh_pattern . 0 20% 4320
 visible_hostname VoltVpn
-END
-sed -i $MYIP2 /etc/squid/squid.conf;
+mySquid
 
 # setting dan install vnstat debian 64bit
 apt-get -y install vnstat
