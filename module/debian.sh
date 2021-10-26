@@ -845,7 +845,6 @@ history -c
 echo "unset HISTFILE" >> /etc/profile
 
 #clearing history
-history -c
 rm -f debian.sh
 cd /root
 # info
