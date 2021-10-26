@@ -577,8 +577,8 @@ COMMIT
 -A INPUT -p tcp -m tcp --dport 53 -j ACCEPT
 -A INPUT -p tcp --dport 22  -m state --state NEW -j ACCEPT
 -A INPUT -p tcp --dport 88  -m state --state NEW -j ACCEPT
--A INPUT -p tcp --dport 143  -m state --state NEW -j ACCEPT
--A INPUT -p tcp --dport 109  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 843  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 844  -m state --state NEW -j ACCEPT
 -A INPUT -p tcp --dport 444  -m state --state NEW -j ACCEPT
 -A INPUT -p tcp --dport 4433  -m state --state NEW -j ACCEPT
 -A INPUT -p tcp --dport 1194  -m state --state NEW -j ACCEPT
@@ -750,6 +750,37 @@ vnstat -u -i eth0
 cd /home/vps/public_html
 zip configs.zip client.ovpn OpenVPN-Stunnel.ovpn stunnel.conf
 
+cat <<'badvpnEOF'> /tmp/install-badvpn.bash
+#!/bin/bash
+if [[ -e /usr/local/bin/badvpn-udpgw ]]; then
+ printf "%s\n" "BadVPN-udpgw already installed"
+ exit 1
+else
+ curl -4skL "https://github.com/ambrop72/badvpn/archive/4b7070d8973f99e7cfe65e27a808b3963e25efc3.zip" -o /tmp/badvpn.zip
+ unzip -qq /tmp/badvpn.zip -d /tmp && rm -f /tmp/badvpn.zip
+ cd /tmp/badvpn-4b7070d8973f99e7cfe65e27a808b3963e25efc3
+ cmake -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1 &> /dev/null
+ make install &> /dev/null
+ rm -rf /tmp/badvpn-4b7070d8973f99e7cfe65e27a808b3963e25efc3
+ cat <<'EOFudpgw' > /lib/systemd/system/badvpn-udpgw.service
+[Unit]
+Description=BadVPN UDP Gateway Server daemon
+Wants=network.target
+After=network.target
+[Service]
+ExecStart=/usr/local/bin/badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 4000 --max-connections-for-client 4000 --loglevel info
+Restart=always
+RestartSec=3
+[Install]
+WantedBy=multi-user.target
+EOFudpgw
+systemctl daemon-reload &>/dev/null
+systemctl restart badvpn-udpgw.service &>/dev/null
+systemctl enable badvpn-udpgw.service &>/dev/null
+fi
+badvpnEOF
+screen -S badvpninstall -dm bash -c "bash /tmp/install-badvpn.bash && rm -f /tmp/install-badvpn.bash"
+
 # install fail2ban
 apt -y install fail2ban
 
@@ -822,18 +853,9 @@ chown -R www-data:www-data /home/vps/public_html
 /etc/init.d/stunnel4 restart
 /etc/init.d/vnstat restart
 /etc/init.d/squid restart
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 500
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 500
-screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 500
 
 history -c
 echo "unset HISTFILE" >> /etc/profile
-
-cd
-rm -f /root/ssh-vpn.sh
-
-# finihsing
-clear
 
 #clearing history
 history -c
