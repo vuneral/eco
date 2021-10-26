@@ -55,9 +55,6 @@ apt dist-upgrade -y
 # install wget and curl
 apt -y install wget curl
 sudo apt-get install pritunl-client-electron -y
-apt install iptables-persistent -y -f
-systemctl restart netfilter-persistent 
-systemctl enable netfilter-persistent
 apt install tuned -y 
 systemctl enable tuned 
 systemctl restart tuned 
@@ -136,7 +133,7 @@ sed -i 's/AcceptEnv/#AcceptEnv/g' /etc/ssh/sshd_config
 # install
 apt-get --reinstall --fix-missing install -y bzip2 gzip coreutils wget screen rsyslog iftop htop net-tools zip unzip wget net-tools curl nano sed screen gnupg gnupg1 bc apt-transport-https build-essential dirmngr libxml-parser-perl neofetch git
 echo "clear" >> .profile
-echo "echo neofetch" >> .profile
+echo "neofetch" >> .profile
 echo "echo ================" >> .profile
 echo "echo Script By VoltVpn" >> .profile
 echo "echo ================" >> .profile
@@ -221,7 +218,7 @@ verify-client-cert none
 username-as-common-name
 max-clients 4080
 topology subnet
-server 192.168.1.0 255.255.240.0
+server 192.168.1.0 255.255.0.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -258,7 +255,7 @@ verify-client-cert none
 username-as-common-name
 max-clients 4080
 topology subnet
-server 192.168.2.0 255.255.240.0
+server 192.168.2.0 255.255.0.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -295,7 +292,7 @@ verify-client-cert none
 username-as-common-name
 max-clients 4080
 topology subnet
-server 192.168.3.0 255.255.240.0
+server 192.168.3.0 255.255.0.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -332,7 +329,7 @@ verify-client-cert none
 username-as-common-name
 max-clients 4080
 topology subnet
-server 192.168.4.0 255.255.240.0
+server 192.168.4.0 255.255.0.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -589,6 +586,9 @@ iptables -t nat -I POSTROUTING -s 192.168.4.0/24 -o $ANU -j MASQUERADE
 iptables-save > /etc/iptables.up.rules
 chmod +x /etc/iptables.up.rules
 iptables-restore -t < /etc/iptables.up.rules
+apt install iptables-persistent -y
+systemctl restart netfilter-persistent 
+systemctl enable netfilter-persistent
 netfilter-persistent save
 netfilter-persistent reload
 
@@ -852,7 +852,7 @@ apt -y autoremove
 
 # finishing
 cd
-chown -R www-data:www-data /home/vps/public_html
+chown -R www-data:www-data /var/www/openvpn/index.html
 /etc/init.d/nginx restart
 /etc/init.d/openvpn restart
 /etc/init.d/cron restart
