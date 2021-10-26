@@ -588,13 +588,13 @@ netfilter-persistent save
 netfilter-persistent reload
 
 # Restore Iptables
-cat > /etc/network/if-up.d/iptables <<-END
+cat > /etc/network/if-up.d/iptables <<-ssd
 iptables-restore < /etc/iptables.up.rules
 iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o $ANU -j SNAT --to xxxxxxxxx
 iptables -t nat -A POSTROUTING -s 192.168.2.0/24 -o $ANU -j SNAT --to xxxxxxxxx
 iptables -t nat -A POSTROUTING -s 192.168.3.0/24 -o $ANU -j SNAT --to xxxxxxxxx
 iptables -t nat -A POSTROUTING -s 192.168.4.0/24 -o $ANU -j SNAT --to xxxxxxxxx
-END
+ssd
 sed -i $MYIP2 /etc/network/if-up.d/iptables
 chmod +x /etc/network/if-up.d/iptables
 
