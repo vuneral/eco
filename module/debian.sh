@@ -115,6 +115,7 @@ systemctl start rc-local.service
 
 sed -i '$ i\echo "nameserver 208.67.222.222" > /etc/resolv.conf' /etc/rc.local
 sed -i '$ i\echo "nameserver 208.67.220.220" >> /etc/resolv.conf' /etc/rc.local
+sed -i '$ i\iptables-restore < /etc/iptables.up.rules' /etc/rc.local
 
 # disable ipv6
 echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
@@ -126,6 +127,7 @@ sed -i 's/AcceptEnv/#AcceptEnv/g' /etc/ssh/sshd_config
 # install
 apt-get --reinstall --fix-missing install -y bzip2 gzip coreutils wget screen rsyslog iftop htop net-tools zip unzip wget net-tools curl nano sed screen gnupg gnupg1 bc apt-transport-https build-essential dirmngr libxml-parser-perl neofetch git
 echo "clear" >> .profile
+echo "echo neofetch" >> .profile
 echo "echo ================" >> .profile
 echo "echo Script By VoltVpn" >> .profile
 echo "echo ================" >> .profile
@@ -581,17 +583,6 @@ iptables-restore -t < /etc/iptables.up.rules
 netfilter-persistent save
 netfilter-persistent reload
 
-# Restore Iptables
-cat > /etc/network/if-up.d/iptables <<-ssd
-iptables-restore < /etc/iptables.up.rules
-iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o $ANU -j SNAT --to xxxxxxxxx
-iptables -t nat -A POSTROUTING -s 192.168.2.0/24 -o $ANU -j SNAT --to xxxxxxxxx
-iptables -t nat -A POSTROUTING -s 192.168.3.0/24 -o $ANU -j SNAT --to xxxxxxxxx
-iptables -t nat -A POSTROUTING -s 192.168.4.0/24 -o $ANU -j SNAT --to xxxxxxxxx
-ssd
-sed -i $MYIP2 /etc/network/if-up.d/iptables
-chmod +x /etc/network/if-up.d/iptables
-
 # Starting OpenVPN server
 systemctl start openvpn@server_tcp
 systemctl start openvpn@server_tcp1
@@ -606,18 +597,35 @@ systemctl restart openvpn@server_tcp1
 systemctl restart openvpn@server_udp
 systemctl restart openvpn@server_udp1
 
+cd
+rm /etc/nginx/sites-enabled/default
+rm /etc/nginx/sites-available/default
+wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/vuneral/eco/main/module/nginx.conf"
 # Creating nginx config for our ovpn config downloads webserver
-cat <<'myNginxC' > /etc/nginx/conf.d/sl-ovpn-config.conf
+cat <<'myNginxC' > /etc/nginx/conf.d/sl-config.conf
 # My OpenVPN Config Download Directory
 server {
- listen 0.0.0.0:88;
- server_name localhost;
- root /var/www/openvpn;
- index index.html;
+  listen       88;
+  server_name  127.0.0.1 localhost;
+  access_log /var/log/nginx/vps-access.log;
+  error_log /var/log/nginx/vps-error.log error;
+  root   /var/www/openvpn;
+
+  location / {
+    index  index.html index.htm index.php;
+    try_files $uri $uri/ /index.php?$args;
+  }
+
+  location ~ \.php$ {
+    include /etc/nginx/fastcgi_params;
+    fastcgi_pass  127.0.0.1:9000;
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+  }
 }
 myNginxC
-
 mkdir -p /var/www/openvpn
+echo "<pre>Setup by VoltVpn</pre>" > /var/www/openvpn/index.html
 
 # Now creating all of our OpenVPN Configs 
 cat <<EOF152> /var/www/openvpn/tcp-01.ovpn
