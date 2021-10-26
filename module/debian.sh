@@ -127,9 +127,9 @@ sed -i 's/AcceptEnv/#AcceptEnv/g' /etc/ssh/sshd_config
 # install
 apt-get --reinstall --fix-missing install -y bzip2 gzip coreutils wget screen rsyslog iftop htop net-tools zip unzip wget net-tools curl nano sed screen gnupg gnupg1 bc apt-transport-https build-essential dirmngr libxml-parser-perl neofetch git
 echo "clear" >> .profile
-echo "echo neofetch >> .profile
 echo "echo ================" >> .profile
 echo "echo Script By VoltVpn" >> .profile
+echo "echo ================" >> .profile
 
 # install dropbear
 sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
@@ -612,32 +612,16 @@ systemctl restart openvpn@server_tcp1
 systemctl restart openvpn@server_udp
 systemctl restart openvpn@server_udp1
 
-cd
-rm /etc/nginx/sites-enabled/default
-rm /etc/nginx/sites-available/default
-wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/vuneral/eco/main/module/nginx.conf"
-cat <<'myNginxC' > /etc/nginx/vps.conf
+# Creating nginx config for our ovpn config downloads webserver
+cat <<'myNginxC' > /etc/nginx/conf.d/sl-ovpn-config.conf
+# My OpenVPN Config Download Directory
 server {
-  listen       88;
-  server_name  127.0.0.1 localhost;
-  access_log /var/log/nginx/vps-access.log;
-  error_log /var/log/nginx/vps-error.log error;
-  root   /var/www/openvpn;
-
-  location / {
-    index  index.html index.htm index.php;
-    try_files $uri $uri/ /index.php?$args;
-  }
-
-  location ~ \.php$ {
-    include /etc/nginx/fastcgi_params;
-    fastcgi_pass  127.0.0.1:9000;
-    fastcgi_index index.php;
-    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-  }
+ listen 0.0.0.0:88;
+ server_name localhost;
+ root /var/www/openvpn;
+ index index.html;
 }
 myNginxC
-/etc/init.d/nginx restart
 
 mkdir -p /var/www/openvpn
 
@@ -803,7 +787,7 @@ apt install -y libxml-parser-perl
 
 # remove unnecessary files
 apt -y autoclean
-apt -y remove --purge unscd
+apt -y remove --purge unscd*;
 apt-get -y --purge remove samba*;
 apt-get -y --purge remove apache2*;
 apt-get -y --purge remove bind9*;
@@ -823,13 +807,12 @@ chown -R www-data:www-data /home/vps/public_html
 /etc/init.d/vnstat restart
 /etc/init.d/squid restart
 screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 4000
+apt-get -y update --fix-missing
 
 history -c
 echo "unset HISTFILE" >> /etc/profile
 
 #clearing history
-rm -f debian.sh
-cd /root
 # info
 clear
 echo " "
@@ -842,4 +825,5 @@ echo "                            Local Vpn Module Installation                 
 echo "                                  Script By VoltVpn                        "
 echo "--------------------------------------------------------------------------------"
 sleep 10
+rm -f debian.sh
 clear
