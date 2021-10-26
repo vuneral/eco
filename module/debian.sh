@@ -135,25 +135,20 @@ sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
 sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=843/g' /etc/default/dropbear
 sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 844 "/g' /etc/default/dropbear
 
-if [[ "$(command -v squid)" ]]; then
- if [[ "$(squid -v | grep -Ec '(V|v)ersion\s3.5.23')" -lt 1 ]]; then
-  apt remove --purge squid -y -f 2>/dev/null
-  wget "http://security.debian.org/debian-security/pool/updates/main/s/squid3/squid_3.5.23-5+deb9u7_amd64.deb" -qO squid.deb
-  dpkg -i squid.deb
-  rm -f squid.deb
- else
-  echo -e "Squid v3.5.23 already installed"
- fi
-else
- apt install libecap3 squid-common squid-langpack -y -f 2>/dev/null
- wget "http://security.debian.org/debian-security/pool/updates/main/s/squid3/squid_3.5.23-5+deb9u7_amd64.deb" -qO squid.deb
- dpkg -i squid.deb
- rm -f squid.deb
-fi
+apt remove --purge squid -y
+wget "http://security.debian.org/debian-security/pool/updates/main/s/squid3/squid_3.5.23-5+deb9u7_amd64.deb" -qO squid.deb
+dpkg -i squid.deb
+rm -f squid.deb
+
+apt install libecap3 squid-common squid-langpack -y -f
+wget "http://security.debian.org/debian-security/pool/updates/main/s/squid3/squid_3.5.23-5+deb9u7_amd64.deb" -qO squid.deb
+dpkg -i squid.deb
+rm -f squid.deb
+
 
 # install squid3
 cat <<mySquid > /etc/squid/squid.conf
-acl VPN dst $(wget -4qO- http://ipinfo.io/ip)/32
+acl VPN dst $(wget -4qO- http://ipinfo.io/ip)
 http_access allow VPN
 http_access deny all 
 http_port 0.0.0.0:8000
