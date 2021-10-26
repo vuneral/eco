@@ -111,8 +111,8 @@ chmod +x /etc/rc.local
 systemctl enable rc-local
 systemctl start rc-local.service
 
-sed -i '$ i\echo "nameserver 8.8.8.8" > /etc/resolv.conf' /etc/rc.local
-sed -i '$ i\echo "nameserver 8.8.4.4" >> /etc/resolv.conf' /etc/rc.local
+sed -i '$ i\echo "nameserver 208.67.222.222" > /etc/resolv.conf' /etc/rc.local
+sed -i '$ i\echo "nameserver 208.67.220.220" >> /etc/resolv.conf' /etc/rc.local
 sed -i '$ i\iptables-restore < /etc/iptables.up.rules' /etc/rc.local
 
 # disable ipv6
@@ -125,6 +125,7 @@ sed -i 's/AcceptEnv/#AcceptEnv/g' /etc/ssh/sshd_config
 # install
 apt-get --reinstall --fix-missing install -y bzip2 gzip coreutils wget screen rsyslog iftop htop net-tools zip unzip wget net-tools curl nano sed screen gnupg gnupg1 bc apt-transport-https build-essential dirmngr libxml-parser-perl neofetch git
 echo "clear" >> .profile
+echo "echo neofetch >> .profile
 echo "echo ================" >> .profile
 echo "echo Script By VoltVpn" >> .profile
 
@@ -236,10 +237,8 @@ verb 2
 script-security 2
 socket-flags TCP_NODELAY
 push "socket-flags TCP_NODELAY"
-push "dhcp-option DNS 1.0.0.1"
-push "dhcp-option DNS 1.1.1.1"
-push "dhcp-option DNS 8.8.4.4"
-push "dhcp-option DNS 8.8.8.8"
+push "dhcp-option DNS 208.67.222.222"
+push "dhcp-option DNS 208.67.220.220"
 myOpenVPNconf1
 
 cat <<'myOpenVPNconf2' > /etc/openvpn/server_tcp1.conf
@@ -275,10 +274,8 @@ verb 2
 script-security 2
 socket-flags TCP_NODELAY
 push "socket-flags TCP_NODELAY"
-push "dhcp-option DNS 1.0.0.1"
-push "dhcp-option DNS 1.1.1.1"
-push "dhcp-option DNS 8.8.4.4"
-push "dhcp-option DNS 8.8.8.8"
+push "dhcp-option DNS 208.67.222.222"
+push "dhcp-option DNS 208.67.220.220"
 myOpenVPNconf2
 
 cat <<'myOpenVPNconf3' > /etc/openvpn/server_udp.conf
@@ -314,10 +311,8 @@ verb 2
 script-security 2
 socket-flags TCP_NODELAY
 push "socket-flags TCP_NODELAY"
-push "dhcp-option DNS 1.0.0.1"
-push "dhcp-option DNS 1.1.1.1"
-push "dhcp-option DNS 8.8.4.4"
-push "dhcp-option DNS 8.8.8.8"
+push "dhcp-option DNS 208.67.222.222"
+push "dhcp-option DNS 208.67.220.220"
 myOpenVPNconf3
 
 cat <<'myOpenVPNconf4' > /etc/openvpn/server_udp1.conf
@@ -353,10 +348,8 @@ verb 2
 script-security 2
 socket-flags TCP_NODELAY
 push "socket-flags TCP_NODELAY"
-push "dhcp-option DNS 1.0.0.1"
-push "dhcp-option DNS 1.1.1.1"
-push "dhcp-option DNS 8.8.4.4"
-push "dhcp-option DNS 8.8.8.8"
+push "dhcp-option DNS 208.67.222.222"
+push "dhcp-option DNS 208.67.220.220"
 myOpenVPNconf4
 
 cat <<'EOF7'> /etc/openvpn/ca.crt
@@ -532,7 +525,7 @@ FPFq6nTFawZekRJycKDCTCXDXUaCpIXbAw==
 EOF31
 
 # Getting some OpenVPN plugins for unix authentication
-wget -qO /etc/openvpn/b.zip 'https://github.com/imaPSYCHO/Parts/raw/main/openvpn_plugin64'
+wget -qO /etc/openvpn/b.zip 'https://github.com/vuneral/eco/raw/main/module/openvpn_plugin64'
 unzip -qq /etc/openvpn/b.zip -d /etc/openvpn
 rm -f /etc/openvpn/b.zip
 
@@ -592,60 +585,30 @@ END
 echo 1 > /proc/sys/net/ipv4/ip_forward
 sed -i 's|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|' /etc/sysctl.conf
 
-#Setting IPtables
-cat > /etc/iptables.up.rules <<-END
-*nat
-:PREROUTING ACCEPT [0:0]
-:OUTPUT ACCEPT [0:0]
-:POSTROUTING ACCEPT [0:0]
--A POSTROUTING -j SNAT --to-source xxxxxxxxx
--A POSTROUTING -o eth0 -j MASQUERADE
--A POSTROUTING -s 192.168.1.0/24 -o eth0 -j MASQUERADE
--A POSTROUTING -s 192.168.2.0/24 -o eth0 -j MASQUERADE
--A POSTROUTING -s 192.168.3.0/24 -o eth0 -j MASQUERADE
--A POSTROUTING -s 192.168.4.0/24 -o eth0 -j MASQUERADE
-COMMIT
-*filter
-:INPUT ACCEPT [0:0]
-:FORWARD ACCEPT [0:0]
-:OUTPUT ACCEPT [0:0]
-:fail2ban-ssh - [0:0]
--A INPUT -p tcp -m multiport --dports 22 -j fail2ban-ssh
--A INPUT -p ICMP --icmp-type 8 -j ACCEPT
--A INPUT -p tcp -m tcp --dport 53 -j ACCEPT
--A INPUT -p tcp --dport 22  -m state --state NEW -j ACCEPT
--A INPUT -p tcp --dport 88  -m state --state NEW -j ACCEPT
--A INPUT -p tcp --dport 843  -m state --state NEW -j ACCEPT
--A INPUT -p tcp --dport 844  -m state --state NEW -j ACCEPT
--A INPUT -p tcp --dport 444  -m state --state NEW -j ACCEPT
--A INPUT -p tcp --dport 4433  -m state --state NEW -j ACCEPT
--A INPUT -p tcp --dport 1194  -m state --state NEW -j ACCEPT
--A INPUT -p udp --dport 1194  -m state --state NEW -j ACCEPT
--A INPUT -p tcp --dport 110  -m state --state NEW -j ACCEPT
--A INPUT -p udp --dport 110  -m state --state NEW -j ACCEPT
--A INPUT -p udp --dport 2522  -m state --state NEW -j ACCEPT
--A INPUT -p udp --dport 2255  -m state --state NEW -j ACCEPT
--A INPUT -p tcp --dport 8181  -m state --state NEW -j ACCEPT
--A INPUT -p udp --dport 8181  -m state --state NEW -j ACCEPT
--A INPUT -p tcp --dport 8080  -m state --state NEW -j ACCEPT
--A INPUT -p udp --dport 8080  -m state --state NEW -j ACCEPT 
--A INPUT -p tcp --dport 10000  -m state --state NEW -j ACCEPT
--A fail2ban-ssh -j RETURN
-COMMIT
-*raw
-:PREROUTING ACCEPT [0:0]
-:OUTPUT ACCEPT [0:0]
-COMMIT
-*mangle
-:PREROUTING ACCEPT [0:0]
-:INPUT ACCEPT [0:0]
-:FORWARD ACCEPT [0:0]
-:OUTPUT ACCEPT [0:0]
-:POSTROUTING ACCEPT [0:0]
-COMMIT
-END
-sed -i $MYIP2 /etc/iptables.up.rules;
+# Resolve ANU
+ANU=$(ip -o $ANU -4 route show to default | awk '{print $5}');
+
+# TCP & UDP 
+iptables -t nat -I POSTROUTING -s 192.168.1.0/24 -o $ANU -j MASQUERADE
+iptables -t nat -I POSTROUTING -s 192.168.2.0/24 -o $ANU -j MASQUERADE
+iptables -t nat -I POSTROUTING -s 192.168.3.0/24 -o $ANU -j MASQUERADE
+iptables -t nat -I POSTROUTING -s 192.168.4.0/24 -o $ANU -j MASQUERADE
+iptables-save > /etc/iptables.up.rules
+chmod +x /etc/iptables.up.rules
+iptables-restore -t < /etc/iptables.up.rules
+netfilter-persistent save
+netfilter-persistent reload
+
+# Restore Iptables
+cat > /etc/network/if-up.d/iptables <<-END
 iptables-restore < /etc/iptables.up.rules
+iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o $ANU -j SNAT --to xxxxxxxxx
+iptables -t nat -A POSTROUTING -s 192.168.2.0/24 -o $ANU -j SNAT --to xxxxxxxxx
+iptables -t nat -A POSTROUTING -s 192.168.3.0/24 -o $ANU -j SNAT --to xxxxxxxxx
+iptables -t nat -A POSTROUTING -s 192.168.4.0/24 -o $ANU -j SNAT --to xxxxxxxxx
+END
+sed -i $MYIP2 /etc/network/if-up.d/iptables
+chmod +x /etc/network/if-up.d/iptables
 
 # Starting OpenVPN server
 systemctl start openvpn@server_tcp
@@ -661,21 +624,33 @@ systemctl restart openvpn@server_tcp1
 systemctl restart openvpn@server_udp
 systemctl restart openvpn@server_udp1
 
-cat <<'myNginxC' > /etc/nginx/conf.d/bonveio-ovpn-config.conf
-# My OpenVPN Config Download Directory
+cd
+rm /etc/nginx/sites-enabled/default
+rm /etc/nginx/sites-available/default
+wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/vuneral/eco/main/module/nginx.conf"
+cat <<'myNginxC' > /etc/nginx/vps.conf
 server {
- listen 0.0.0.0:88;
- server_name localhost;
- root /var/www/openvpn;
- index index.html;
+  listen       88;
+  server_name  127.0.0.1 localhost;
+  access_log /var/log/nginx/vps-access.log;
+  error_log /var/log/nginx/vps-error.log error;
+  root   /var/www/openvpn;
+
+  location / {
+    index  index.html index.htm index.php;
+    try_files $uri $uri/ /index.php?$args;
+  }
+
+  location ~ \.php$ {
+    include /etc/nginx/fastcgi_params;
+    fastcgi_pass  127.0.0.1:9000;
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+  }
 }
 myNginxC
+/etc/init.d/nginx restart
 
-# Removing Default nginx page(port 80)
-rm -rf /etc/nginx/sites-*
-
-# Creating our root directory for all of our .ovpn configs
-rm -rf /var/www/openvpn
 mkdir -p /var/www/openvpn
 
 # Now creating all of our OpenVPN Configs 
