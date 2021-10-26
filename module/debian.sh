@@ -55,12 +55,21 @@ apt dist-upgrade -y
 # install wget and curl
 apt -y install wget curl
 sudo apt-get install pritunl-client-electron -y
+apt install iptables-persistent -y -f
+systemctl restart netfilter-persistent 
+systemctl enable netfilter-persistent
+apt install tuned -y 
+systemctl enable tuned 
+systemctl restart tuned 
+tuned-adm profile throughput-performance
 
 # Removing some firewall tools that may affect other services
 apt-get remove --purge ufw firewalld -y
 #Install Component
-apt-get install nano wget curl zip unzip tar gzip p7zip-full bc rc openssl cron net-tools dnsutils dos2unix screen bzip2 ccrypt -y
-apt-get install dropbear stunnel4 privoxy ca-certificates nginx squid ruby apt-transport-https lsb-release -y
+apt-get install nano wget curl zip unzip tar gzip p7zip-full bc rc tcpdump dsniff jq openssl cron net-tools dnsutils dos2unix screen bzip2 ccrypt -y
+apt-get install dropbear stunnel4 privoxy python ca-certificates nginx squid grepcidr ruby apt-transport-https lsb-release -y
+apt install perl libnet-ssleay-perl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python dbus libxml-parser-perl shared-mime-info -y
+apt install git build-essential libssl-dev libnss3-dev cmake -y
 
 # Installing a text colorizer
 gem install lolcat
@@ -210,9 +219,9 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4000
+max-clients 4080
 topology subnet
-server 192.168.1.0 255.255.255.0
+server 192.168.1.0 255.255.240.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -247,9 +256,9 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4000
+max-clients 4080
 topology subnet
-server 192.168.2.0 255.255.255.0
+server 192.168.2.0 255.255.240.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -284,9 +293,9 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4000
+max-clients 4080
 topology subnet
-server 192.168.3.0 255.255.255.0
+server 192.168.3.0 255.255.240.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -321,9 +330,9 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4000
+max-clients 4080
 topology subnet
-server 192.168.4.0 255.255.255.0
+server 192.168.4.0 255.255.240.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -596,6 +605,51 @@ systemctl restart openvpn@server_tcp
 systemctl restart openvpn@server_tcp1
 systemctl restart openvpn@server_udp
 systemctl restart openvpn@server_udp1
+
+if [[ ! -e /etc/ohpserver ]]; then
+ mkdir /etc/ohpserver
+ else
+ rm -rf /etc/ohpserver/*
+fi
+curl -4skL "https://github.com/lfasmpao/open-http-puncher/releases/download/0.1/ohpserver-linux32.zip" -o /etc/ohpserver/ohp.zip
+unzip -qq /etc/ohpserver/ohp.zip -d /etc/ohpserver
+rm -rf /etc/ohpserver/ohp.zip
+chmod +x /etc/ohpserver/ohpserver
+
+cat <<'Ohp1' > /etc/ohpserver/run
+#!/bin/bash
+# OHPServer startup script
+/etc/ohpserver/ohpserver -port 8085 -proxy 127.0.0.1:25800 -tunnel 127.0.0.1:843 > /etc/ohpserver/dropbear.log &
+/etc/ohpserver/ohpserver -port 8086 -proxy 127.0.0.1:25800 -tunnel 127.0.0.1:225 > /etc/ohpserver/openssh.log &
+/etc/ohpserver/ohpserver -port 8087 -proxy 127.0.0.1:25800 -tunnel 127.0.0.1:110 > /etc/ohpserver/openvpn.log &
+Ohp1
+chmod +x /etc/ohpserver/run
+
+cat <<'Ohp2' > /etc/ohpserver/stop
+#!/bin/bash
+# OHPServer stop script
+lsof -t -i tcp:8085 -s tcp:listen | xargs kill 2>/dev/null ### Dropbear
+lsof -t -i tcp:8086 -s tcp:listen | xargs kill 2>/dev/null ### OpenSSH
+lsof -t -i tcp:8087 -s tcp:listen | xargs kill 2>/dev/null ### OpenVPN TCP RSA
+Ohp2
+chmod +x /etc/ohpserver/stop
+
+cat <<'EOFohp' > /lib/systemd/system/ohpserver.service
+[Unit]
+Description=OpenHTTP Puncher Server
+Wants=network.target
+After=network.target
+[Service]
+ExecStart=/bin/bash /etc/ohpserver/run 2>/dev/null
+ExecStop=/bin/bash /etc/ohpserver/stop 2>/dev/null
+Restart=always
+RestartSec=3
+[Install]
+WantedBy=multi-user.target
+EOFohp
+systemctl daemon-reload
+systemctl restart ohpserver.service
+systemctl enable ohpserver.service
 
 cd
 rm /etc/nginx/sites-enabled/default
