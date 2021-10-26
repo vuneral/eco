@@ -41,8 +41,12 @@ UseDNS no
 EOFOpenSSH
 
 rm -rf /etc/apt/sources.list.d/openvpn*
-echo "deb http://build.openvpn.net/debian/openvpn/stable $(lsb_release -sc) main" >/etc/apt/sources.list.d/openvpn.list && apt-key del E158C569 && wget -O - https://swupdate.openvpn.net/repos/repo-public.gpg | apt-key add -
-wget -qO security-openvpn-net.asc "https://keys.openpgp.org/vks/v1/by-fingerprint/F554A3687412CFFEBDEFE0A312F5F7B42F2B01E7" && gpg --import security-openvpn-net.asc
+sudo tee /etc/apt/sources.list.d/pritunl.list << EOF
+deb http://repo.pritunl.com/stable/apt buster main
+EOF
+
+sudo apt-get install dirmngr
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv 7568D9BB55FF9E5287D586017AE645C0CF8E292A
 #update
 apt update -y
 apt upgrade -y
@@ -50,12 +54,13 @@ apt dist-upgrade -y
 
 # install wget and curl
 apt -y install wget curl
+sudo apt-get install pritunl-client-electron
 
 # Removing some firewall tools that may affect other services
 apt-get remove --purge ufw firewalld -y
 #Install Component
 apt-get install nano wget curl zip unzip tar gzip p7zip-full bc rc openssl cron net-tools dnsutils dos2unix screen bzip2 ccrypt -y
-apt-get install openvpn dropbear stunnel4 privoxy ca-certificates nginx ruby apt-transport-https lsb-release squid3 screenfetch -y
+apt-get install dropbear stunnel4 privoxy ca-certificates nginx ruby apt-transport-https lsb-release squid3 -y
 
 # Installing a text colorizer
 gem install lolcat
@@ -68,11 +73,11 @@ sed -i '/password\s*requisite\s*pam_cracklib.s.*/d' /etc/pam.d/common-password
 sed -i 's/use_authtok //g' /etc/pam.d/common-password
 
 # initializing var
+export DEBIAN_FRONTEND=noninteractive
 MYIP=`ifconfig eth0 | awk 'NR==2 {print $2}'`
 MYIP2="s/xxxxxxxxx/$MYIP/g";
-cd /root
-wget "https://raw.githubusercontent.com/wangzki03/VPSauto/master/tool/plugin.tgz"
-wget "https://raw.githubusercontent.com/wangzki03/VPSauto/master/tool/premiummenu.zip"
+source /etc/os-release
+ver=$VERSION_ID
 
 # set time UMT +8
 ln -fs /usr/share/zoneinfo/Asia/Kuala_Lumpur /etc/localtime
@@ -751,48 +756,16 @@ iptables -A INPUT -s $(wget -4qO- http://ipinfo.io/ip) -p tcp -m multiport --dpo
 
 # Configure menu
 apt-get install unzip
-cd /usr/local/bin/
-wget "https://raw.githubusercontent.com/wangzki03/VPSauto/master/tool/premiummenu.zip" 
-unzip premiummenu.zip
-chmod +x /usr/local/bin/*
 
 # add eth0 to vnstat
 vnstat -u -i eth0
 
-# compress configs
-cd /home/vps/public_html
-zip configs.zip client.ovpn OpenVPN-Stunnel.ovpn stunnel.conf
-
-cat <<'badvpnEOF'> /tmp/install-badvpn.bash
-#!/bin/bash
-if [[ -e /usr/local/bin/badvpn-udpgw ]]; then
- printf "%s\n" "BadVPN-udpgw already installed"
- exit 1
-else
- curl -4skL "https://github.com/ambrop72/badvpn/archive/4b7070d8973f99e7cfe65e27a808b3963e25efc3.zip" -o /tmp/badvpn.zip
- unzip -qq /tmp/badvpn.zip -d /tmp && rm -f /tmp/badvpn.zip
- cd /tmp/badvpn-4b7070d8973f99e7cfe65e27a808b3963e25efc3
- cmake -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1 &> /dev/null
- make install &> /dev/null
- rm -rf /tmp/badvpn-4b7070d8973f99e7cfe65e27a808b3963e25efc3
- cat <<'EOFudpgw' > /lib/systemd/system/badvpn-udpgw.service
-[Unit]
-Description=BadVPN UDP Gateway Server daemon
-Wants=network.target
-After=network.target
-[Service]
-ExecStart=/usr/local/bin/badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 4000 --max-connections-for-client 4000 --loglevel info
-Restart=always
-RestartSec=3
-[Install]
-WantedBy=multi-user.target
-EOFudpgw
-systemctl daemon-reload &>/dev/null
-systemctl restart badvpn-udpgw.service &>/dev/null
-systemctl enable badvpn-udpgw.service &>/dev/null
-fi
-badvpnEOF
-screen -S badvpninstall -dm bash -c "bash /tmp/install-badvpn.bash && rm -f /tmp/install-badvpn.bash"
+# install badvpn
+cd
+wget -O /usr/bin/badvpn-udpgw "https://github.com/vuneral/eco/raw/main/module/badvpn-udpgw64"
+chmod +x /usr/bin/badvpn-udpgw
+sed -i '$ i\screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 4000' /etc/rc.local
+screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 4000
 
 # install fail2ban
 apt -y install fail2ban
@@ -866,6 +839,7 @@ chown -R www-data:www-data /home/vps/public_html
 /etc/init.d/stunnel4 restart
 /etc/init.d/vnstat restart
 /etc/init.d/squid restart
+screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 4000
 
 history -c
 echo "unset HISTFILE" >> /etc/profile
