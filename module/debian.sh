@@ -2,6 +2,44 @@
 #Premium Local Vpn Script
 #Script By Volt Vpn
 
+cat <<'EOFOpenSSH' > /etc/ssh/sshd_config
+Port 22
+Port 225
+ListenAddress 0.0.0.0
+Protocol 2
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_dsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+#HostKey /etc/ssh/ssh_host_ed25519_key
+#KeyRegenerationInterval 3600
+ServerKeyBits 1024
+SyslogFacility AUTH
+LogLevel INFO
+PermitRootLogin yes
+StrictModes yes
+#RSAAuthentication yes
+PubkeyAuthentication yes
+IgnoreRhosts yes
+#RhostsRSAAuthentication no
+HostbasedAuthentication no
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+PasswordAuthentication yes
+X11Forwarding yes
+X11DisplayOffset 10
+GatewayPorts yes
+PrintMotd no
+PrintLastLog yes
+AcceptEnv LANG LC_*
+Subsystem sftp /usr/lib/openssh/sftp-server
+UsePAM yes
+Banner /etc/banner
+TCPKeepAlive yes
+ClientAliveInterval 240
+ClientAliveCountMax 2
+UseDNS no
+EOFOpenSSH
+
 rm -rf /etc/apt/sources.list.d/openvpn*
 echo "deb http://build.openvpn.net/debian/openvpn/stable $(lsb_release -sc) main" >/etc/apt/sources.list.d/openvpn.list && apt-key del E158C569 && wget -O - https://swupdate.openvpn.net/repos/repo-public.gpg | apt-key add -
 wget -qO security-openvpn-net.asc "https://keys.openpgp.org/vks/v1/by-fingerprint/F554A3687412CFFEBDEFE0A312F5F7B42F2B01E7" && gpg --import security-openvpn-net.asc
