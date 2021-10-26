@@ -54,7 +54,7 @@ apt dist-upgrade -y
 
 # install wget and curl
 apt -y install wget curl
-sudo apt-get install pritunl-client-electron
+sudo apt-get install pritunl-client-electron -y
 
 # Removing some firewall tools that may affect other services
 apt-get remove --purge ufw firewalld -y
@@ -513,11 +513,6 @@ FPFq6nTFawZekRJycKDCTCXDXUaCpIXbAw==
 -----END CERTIFICATE-----
 EOF31
 
-# Getting some OpenVPN plugins for unix authentication
-wget -qO /etc/openvpn/b.zip 'https://github.com/vuneral/eco/raw/main/module/openvpn_plugin64'
-unzip -qq /etc/openvpn/b.zip -d /etc/openvpn
-rm -f /etc/openvpn/b.zip
-
 # Creating a New update message in server.conf
 cat <<'NUovpn' > /etc/openvpn/server.conf
 # New Update are now released, OpenVPN Server
@@ -541,6 +536,11 @@ cat <<'NUovpn' > /etc/openvpn/server.conf
 # Enjoy the new update
 # Script Updated by VoltVpn
 NUovpn
+
+# Getting some OpenVPN plugins for unix authentication
+wget -qO /etc/openvpn/b.zip 'https://github.com/vuneral/eco/raw/main/module/openvpn_plugin64'
+unzip -qq /etc/openvpn/b.zip -d /etc/openvpn
+rm -f /etc/openvpn/b.zip
  
 # Some workaround for OpenVZ machines for "Startup error" openvpn service
 if [[ "$(hostnamectl | grep -i Virtualization | awk '{print $2}' | head -n1)" == 'openvz' ]]; then
