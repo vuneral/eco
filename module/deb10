@@ -266,9 +266,9 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4080
+max-clients 4000
 topology subnet
-server 192.168.1.0 255.255.240.0
+server 192.168.1.0 255.255.255.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -302,9 +302,9 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4080
+max-clients 4000
 topology subnet
-server 192.168.2.0 255.255.240.0
+server 192.168.2.0 255.255.255.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -338,9 +338,9 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4080
+max-clients 4000
 topology subnet
-server 192.168.3.0 255.255.240.0
+server 192.168.3.0 255.255.255.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -353,7 +353,7 @@ push "dhcp-option DNS 208.67.222.222"
 push "dhcp-option DNS 208.67.220.220"
 myOpenVPNconf3
  cat <<'myOpenVPNconf4' > /etc/openvpn/server_udp1.conf
-# GVPNHUB
+# VoltNet
 port MyOvpnPort4
 dev tun
 proto udp
@@ -374,9 +374,9 @@ reneg-sec 0
 plugin /etc/openvpn/openvpn-auth-pam.so /etc/pam.d/login
 verify-client-cert none
 username-as-common-name
-max-clients 4080
+max-clients 4000
 topology subnet
-server 192.168.4.0 255.255.240.0
+server 192.168.4.0 255.255.255.0
 push "redirect-gateway def1"
 keepalive 5 60
 status /etc/openvpn/tcp_stats.log
@@ -591,7 +591,6 @@ fi
  # Allow IPv4 Forwarding
  echo 'net.ipv4.ip_forward=1' > /etc/sysctl.d/20-openvpn.conf && sysctl --system &> /dev/null && echo 1 > /proc/sys/net/ipv4/ip_forward
 
-
  # Installing Firewalld
  apt-get remove --purge ufw firewalld -y
  # Resolve ANU
@@ -622,7 +621,6 @@ fi
  systemctl restart openvpn@server_tcp1
  systemctl restart openvpn@server_udp
  systemctl restart openvpn@server_udp1
-
  
  # Pulling OpenVPN no internet fixer script
  #wget -qO /etc/openvpn/openvpn.bash "https://raw.githubusercontent.com/Bonveio/BonvScripts/master/openvpn.bash"
@@ -913,6 +911,7 @@ function ScriptMessage(){
  echo -e ""
  echo -e " $MyScriptName VPS Installer"
  echo -e " Premium Script V2"
+ echo -e " Stable Repo Speed SC"
  echo -e " Produced By Cyberbossz"
  echo -e ""
 }
@@ -973,9 +972,6 @@ fi
  BBR
  
  clear
- cd ~
- # Running sysinfo 
- bash /etc/profile.d/volt.sh
  
  rm -rf /root/.bash_history && history -c && echo '' > /var/log/syslog
  rm -rf /roo/install*
