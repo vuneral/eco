@@ -191,13 +191,8 @@ sed -i "s|dropbear_port_c|$(netstat -tlnp | grep -i dropbear | awk '{print $4}' 
 # Restarting stunnel service
 systemctl restart $StunnelDir
 
-# Checking if openvpn folder is accidentally deleted or purged
-if [[ ! -e /etc/openvpn ]]; then
- mkdir -p /etc/openvpn
-fi
-
 # Removing all existing openvpn server files
-rm -rf /etc/openvpn/*
+rm -f /etc/openvpn/*
 
 # Creating server.conf, ca.crt, server.crt and server.key
 cat <<'myOpenVPNconf1' > /etc/openvpn/server_tcp.conf
