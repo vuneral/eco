@@ -2,46 +2,13 @@
 # VPS Installer Debian Obly
 # Script by Volt
 
-MyScriptName='VoltNet'
-
-# OpenSSH Ports
-SSH_Port1='22'
-SSH_Port2='225'
-
-# Your SSH Banner
-SSH_Banner='https://raw.githubusercontent.com/vuneral/eco/main/module/banner'
-
-# Dropbear Ports
-Dropbear_Port1='441'
-Dropbear_Port2='442'
-
-# Stunnel Ports
-Stunnel_Port1='444' # through Dropbear
-
-Proxy_Port1='8000'
-Proxy_Port1='8181'
-
-# OpenVPN Ports
-OpenVPN_Port1='1194'
-OpenVPN_Port2='465'
-OpenVPN_Port3='2255'
-OpenVPN_Port4='2522'
-
-# Privoxy Ports (must be 1024 or higher)
-Privoxy_Port1='25800'
-
-# OpenVPN Config Download Port
-OvpnDownload_Port='88' 
-
-# Server local time
-MyVPS_Time='Asia/Kuala_Lumpur'
-
-local IP="$( ip addr | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | egrep -v "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\." | head -n 1 )"
-[ -z "${IP}" ] && IP="$( wget -qO- -t1 -T2 ipv4.icanhazip.com )"
-[ -z "${IP}" ] && IP="$( wget -qO- -t1 -T2 ipinfo.io/ip )"
-[ ! -z "${IP}" ] && echo "${IP}" || echo
- 
-IPADDR="$(ip_address)"
+export DEBIAN_FRONTEND=noninteractive
+OS=`uname -m`;
+MYIP=$(wget -qO- ifconfig.co);
+MYIP2="s/xxxxxxxxx/$MYIP/g";
+NET=$(ip -o $ANU -4 route show to default | awk '{print $5}');
+source /etc/os-release
+ver=$VERSION_ID
 
 apt-get update
 apt-get upgrade -y
@@ -84,8 +51,8 @@ rm -f /etc/ssh/sshd_config*
 # Creating a SSH server config using cat eof tricks
 cat <<'MySSHConfig' > /etc/ssh/sshd_config
 # My OpenSSH Server config
-Port myPORT1
-Port myPORT2
+Port 22
+Port 225
 AddressFamily inet
 ListenAddress 0.0.0.0
 HostKey /etc/ssh/ssh_host_rsa_key
@@ -108,15 +75,6 @@ AcceptEnv LANG LC_*
 Subsystem   sftp  /usr/lib/openssh/sftp-server
 MySSHConfig
 
-# Now we'll put our ssh ports inside of sshd_config
-sed -i "s|myPORT1|$SSH_Port1|g" /etc/ssh/sshd_config
-sed -i "s|myPORT2|$SSH_Port2|g" /etc/ssh/sshd_config
-
-# Download our SSH Banner
-rm -f /etc/banner
-wget -qO /etc/banner "$SSH_Banner"
-dos2unix -q /etc/banner
-
 # My workaround code to remove `BAD Password error` from passwd command, it will fix password-related error on their ssh accounts.
 sed -i '/password\s*requisite\s*pam_cracklib.s.*/d' /etc/pam.d/common-password
 sed -i 's/use_authtok //g' /etc/pam.d/common-password
@@ -137,18 +95,14 @@ rm -rf /etc/default/dropbear*
 cat <<'MyDropbear' > /etc/default/dropbear
 # My Dropbear Config
 NO_START=0
-DROPBEAR_PORT=PORT01
-DROPBEAR_EXTRA_ARGS="-p PORT02"
+DROPBEAR_PORT=441
+DROPBEAR_EXTRA_ARGS="-p 442"
 DROPBEAR_BANNER="/etc/banner"
 DROPBEAR_RSAKEY="/etc/dropbear/dropbear_rsa_host_key"
 DROPBEAR_DSSKEY="/etc/dropbear/dropbear_dss_host_key"
 DROPBEAR_ECDSAKEY="/etc/dropbear/dropbear_ecdsa_host_key"
 DROPBEAR_RECEIVE_WINDOW=65536
 MyDropbear
-
-# Now changing our desired dropbear ports
-sed -i "s|PORT01|$Dropbear_Port1|g" /etc/default/dropbear
-sed -i "s|PORT02|$Dropbear_Port2|g" /etc/default/dropbear
  
 # Restarting dropbear service
 systemctl restart dropbear
@@ -184,13 +138,9 @@ socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
 TIMEOUTclose = 0
 [dropbear]
-accept = Stunnel_Port1
-connect = 127.0.0.1:dropbear_port_c
+accept = 444
+connect = 127.0.0.1:441
 MyStunnelC
-
-# setting stunnel ports
-sed -i "s|Stunnel_Port1|$Stunnel_Port1|g" /etc/stunnel/stunnel.conf
-sed -i "s|dropbear_port_c|$(netstat -tlnp | grep -i dropbear | awk '{print $4}' | cut -d: -f2 | xargs | awk '{print $2}' | head -n1)|g" /etc/stunnel/stunnel.conf
 
 # Restarting stunnel service
 systemctl restart $StunnelDir
@@ -205,7 +155,7 @@ serverje
 # Creating server.conf, ca.crt, server.crt and server.key
 cat <<'myOpenVPNconf1' > /etc/openvpn/server_tcp.conf
 # VoltNet
-port MyOvpnPort1
+port 1194
 dev tun
 proto tcp
 ca /etc/openvpn/ca.crt
@@ -242,7 +192,7 @@ myOpenVPNconf1
 
 cat <<'myOpenVPNconf2' > /etc/openvpn/server_tcp1.conf
 # VoltNet
-port MyOvpnPort2
+port 465
 dev tun
 proto tcp
 ca /etc/openvpn/ca.crt
@@ -279,7 +229,7 @@ myOpenVPNconf2
 
 cat <<'myOpenVPNconf3' > /etc/openvpn/server_udp.conf
 # VoltNet
-port MyOvpnPort3
+port 2255
 dev tun
 proto udp
 ca /etc/openvpn/ca.crt
@@ -316,7 +266,7 @@ myOpenVPNconf3
 
 cat <<'myOpenVPNconf4' > /etc/openvpn/server_udp1.conf
 # VoltNet
-port MyOvpnPort4
+port 2522
 dev tun
 proto udp
 ca /etc/openvpn/ca.crt
@@ -614,7 +564,7 @@ confdir /etc/privoxy
 logdir /var/log/privoxy
 filterfile default.filter
 logfile logfile
-listen-address 0.0.0.0:Privoxy_Port1
+listen-address 0.0.0.0:25800
 toggle 1
 enable-remote-toggle 0
 enable-remote-http-toggle 0
@@ -629,14 +579,8 @@ split-large-forms 0
 keep-alive-timeout 5
 tolerate-pipelining 1
 socket-timeout 300
-permit-access 0.0.0.0/0 IP-ADDRESS
+permit-access 0.0.0.0/0 $MYIP
 myPrivoxy
-
-# Setting machine's IP Address inside of our privoxy config(security that only allows this machine to use this proxy server)
-sed -i "s|IP-ADDRESS|$IPADDR|g" /etc/privoxy/config
- 
-# Setting privoxy ports
-sed -i "s|Privoxy_Port1|$Privoxy_Port1|g" /etc/privoxy/config
 
 #Install Stable Squid
 apt remove --purge squid -y
@@ -653,8 +597,8 @@ cat <<mySquid > /etc/squid/squid.conf
 acl VPN dst $(wget -4qO- http://ipinfo.io/ip)
 http_access allow VPN
 http_access deny all 
-http_port 0.0.0.0:$Proxy_Port1
-http_port 0.0.0.0:$Proxy_Port2
+http_port 0.0.0.0:8000
+http_port 0.0.0.0:8181
 coredump_dir /var/spool/squid
 dns_nameservers 8.8.8.8 8.8.4.4
 refresh_pattern ^ftp: 1440 20% 10080
@@ -664,9 +608,6 @@ refresh_pattern . 0 20% 4320
 visible_hostname VoltNet
 mySquid
 
-sed -i "s|SquidCacheHelper|$Proxy_Port1|g" /etc/squid/squid.conf
-sed -i "s|SquidCacheHelper|$Proxy_Port2|g" /etc/squid/squid.conf
-
 systemctl restart privoxy
 systemctl restart squid
 
@@ -674,15 +615,12 @@ systemctl restart squid
 cat <<'myNginxC' > /etc/nginx/conf.d/bonveio-ovpn-config.conf
 # My OpenVPN Config Download Directory
 server {
- listen 0.0.0.0:myNginx;
+ listen 0.0.0.0:88;
  server_name localhost;
  root /var/www/openvpn;
  index index.html;
 }
 myNginxC
-
-# Setting our nginx config port for .ovpn download site
-sed -i "s|myNginx|$OvpnDownload_Port|g" /etc/nginx/conf.d/bonveio-ovpn-config.conf
 
 # Removing Default nginx page(port 80)
 rm -rf /etc/nginx/sites-*
@@ -698,7 +636,7 @@ cat <<EOF152> /var/www/openvpn/tcp-01.ovpn
 client
 dev tun
 proto tcp
-remote $IPADDR $OpenVPN_Port1
+remote $MYIP 1194
 remote-cert-tls server
 tun-mtu 1500
 mssfix 1450
@@ -718,7 +656,7 @@ cat <<EOF555> /var/www/openvpn/tcp-02.ovpn
 client
 dev tun
 proto tcp
-remote $IPADDR $OpenVPN_Port2
+remote $MYIP 465
 remote-cert-tls server
 tun-mtu 1500
 mssfix 1450
@@ -738,7 +676,7 @@ cat <<EOF666> /var/www/openvpn/udp-01.ovpn
 client
 dev tun
 proto udp
-remote $IPADDR $OpenVPN_Port3
+remote $MYIP 2255
 remote-cert-tls server
 tun-mtu 1500
 mssfix 1450
@@ -758,7 +696,7 @@ cat <<EOF777> /var/www/openvpn/udp-02.ovpn
 client
 dev tun
 proto udp
-remote $IPADDR $OpenVPN_Port4
+remote $MYIP 2522
 remote-cert-tls server
 tun-mtu 1500
 mssfix 1450
