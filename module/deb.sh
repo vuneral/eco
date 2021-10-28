@@ -73,6 +73,10 @@ echo "deb http://build.openvpn.net/debian/openvpn/stable $(lsb_release -sc) main
 wget -qO security-openvpn-net.asc "https://keys.openpgp.org/vks/v1/by-fingerprint/F554A3687412CFFEBDEFE0A312F5F7B42F2B01E7" && gpg --import security-openvpn-net.asc
 apt-get update -y
 apt-get install openvpn -y
+# Getting some OpenVPN plugins for unix authentication
+wget -qO /etc/openvpn/b.zip 'https://github.com/vuneral/eco/raw/main/module/openvpn_plugin64'
+unzip -qq /etc/openvpn/b.zip -d /etc/openvpn
+rm -f /etc/openvpn/b.zip
 
 # Removing some duplicated sshd server configs
 rm -f /etc/ssh/sshd_config*
@@ -193,6 +197,10 @@ systemctl restart $StunnelDir
 
 # Removing all existing openvpn server files
 rm -f /etc/openvpn/*
+
+cat <<'serverje' > /etc/openvpn/server.conf
+#Program By Dani
+serverje
 
 # Creating server.conf, ca.crt, server.crt and server.key
 cat <<'myOpenVPNconf1' > /etc/openvpn/server_tcp.conf
@@ -514,11 +522,6 @@ AgeAMAoGCCqGSM49BAMCA2gAMGUCMQCcX8H4y/yh0FX+KfMlr0pddojAMgDxDzcL
 FPFq6nTFawZekRJycKDCTCXDXUaCpIXbAw==
 -----END CERTIFICATE-----
 EOF31
- 
-# Getting some OpenVPN plugins for unix authentication
-wget -qO /etc/openvpn/b.zip 'https://github.com/vuneral/eco/raw/main/module/openvpn_plugin64'
-unzip -qq /etc/openvpn/b.zip -d /etc/openvpn
-rm -f /etc/openvpn/b.zip
  
 # Some workaround for OpenVZ machines for "Startup error" openvpn service
 if [[ "$(hostnamectl | grep -i Virtualization | awk '{print $2}' | head -n1)" == 'openvz' ]]; then
