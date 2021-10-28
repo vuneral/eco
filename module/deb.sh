@@ -17,6 +17,12 @@ apt install fail2ban -y
  
 # Removing some firewall tools that may affect other services
 apt-get remove --purge ufw firewalld -y
+# Installing OpenVPN by pulling its repository inside sources.list file 
+rm -rf /etc/apt/sources.list.d/openvpn*
+echo "deb http://build.openvpn.net/debian/openvpn/stable $(lsb_release -sc) main" > /etc/apt/sources.list.d/openvpn.list
+wget -qO - http://build.openvpn.net/debian/openvpn/stable/pubkey.gpg|apt-key add -
+apt-get update -y
+apt-get install openvpn -y
  
 # Installing some important machine essentials
 apt-get install nano wget curl zip unzip tar gzip p7zip-full bc rc openssl cron net-tools dnsutils dos2unix screen bzip2 ccrypt -y
@@ -33,17 +39,6 @@ gem install lolcat
 
 # Trying to remove obsolette packages after installation
 apt-get autoremove -y
- 
-# Installing OpenVPN by pulling its repository inside sources.list file 
-#rm -rf /etc/apt/sources.list.d/openvpn*
-echo "deb http://build.openvpn.net/debian/openvpn/stable $(lsb_release -sc) main" >/etc/apt/sources.list.d/openvpn.list && apt-key del E158C569 && wget -O - https://swupdate.openvpn.net/repos/repo-public.gpg | apt-key add -
-wget -qO security-openvpn-net.asc "https://keys.openpgp.org/vks/v1/by-fingerprint/F554A3687412CFFEBDEFE0A312F5F7B42F2B01E7" && gpg --import security-openvpn-net.asc
-apt-get update -y
-apt-get install openvpn -y
-# Getting some OpenVPN plugins for unix authentication
-wget -qO /etc/openvpn/b.zip 'https://github.com/vuneral/eco/raw/main/module/openvpn_plugin64'
-unzip -qq /etc/openvpn/b.zip -d /etc/openvpn
-rm -f /etc/openvpn/b.zip
 
 # Removing some duplicated sshd server configs
 rm -f /etc/ssh/sshd_config*
@@ -145,13 +140,17 @@ MyStunnelC
 # Restarting stunnel service
 systemctl restart $StunnelDir
 
+# Checking if openvpn folder is accidentally deleted or purged
+if [[ ! -e /etc/openvpn ]]; then
+ mkdir -p /etc/openvpn
+fi
+
 # Removing all existing openvpn server files
-rm -f /etc/openvpn/*
+rm -rf /etc/openvpn/*
 
 cat <<'serverje' > /etc/openvpn/server.conf
 #Program By Dani
 serverje
-
 # Creating server.conf, ca.crt, server.crt and server.key
 cat <<'myOpenVPNconf1' > /etc/openvpn/server_tcp.conf
 # VoltNet
@@ -189,7 +188,6 @@ push "socket-flags TCP_NODELAY"
 push "dhcp-option DNS 208.67.222.222"
 push "dhcp-option DNS 208.67.220.220"
 myOpenVPNconf1
-
 cat <<'myOpenVPNconf2' > /etc/openvpn/server_tcp1.conf
 # VoltNet
 port 465
@@ -226,7 +224,6 @@ push "socket-flags TCP_NODELAY"
 push "dhcp-option DNS 208.67.222.222"
 push "dhcp-option DNS 208.67.220.220"
 myOpenVPNconf2
-
 cat <<'myOpenVPNconf3' > /etc/openvpn/server_udp.conf
 # VoltNet
 port 2255
@@ -263,7 +260,6 @@ push "socket-flags TCP_NODELAY"
 push "dhcp-option DNS 208.67.222.222"
 push "dhcp-option DNS 208.67.220.220"
 myOpenVPNconf3
-
 cat <<'myOpenVPNconf4' > /etc/openvpn/server_udp1.conf
 # VoltNet
 port 2522
@@ -300,7 +296,6 @@ push "socket-flags TCP_NODELAY"
 push "dhcp-option DNS 208.67.222.222"
 push "dhcp-option DNS 208.67.220.220"
 myOpenVPNconf4
-
 cat <<'EOF7'> /etc/openvpn/ca.crt
 -----BEGIN CERTIFICATE-----
 MIIDxjCCA02gAwIBAgIUHOYpgZtNLLVaLXdqWXPl2wXN7zAwCgYIKoZIzj0EAwIw
@@ -473,6 +468,14 @@ FPFq6nTFawZekRJycKDCTCXDXUaCpIXbAw==
 -----END CERTIFICATE-----
 EOF31
  
+# Generating openvpn dh.pem file using openssl
+openssl dhparam -out /etc/openvpn/dh.pem 1024
+ 
+# Getting some OpenVPN plugins for unix authentication
+wget -qO /etc/openvpn/b.zip 'https://raw.githubusercontent.com/Bonveio/BonvScripts/master/openvpn_plugin64'
+unzip -qq /etc/openvpn/b.zip -d /etc/openvpn
+rm -f /etc/openvpn/b.zip
+ 
 # Some workaround for OpenVZ machines for "Startup error" openvpn service
 if [[ "$(hostnamectl | grep -i Virtualization | awk '{print $2}' | head -n1)" == 'openvz' ]]; then
 sed -i 's|LimitNPROC|#LimitNPROC|g' /lib/systemd/system/openvpn*
@@ -548,10 +551,6 @@ systemctl enable openvpn@server_tcp
 systemctl enable openvpn@server_tcp1
 systemctl enable openvpn@server_udp
 systemctl enable openvpn@server_udp1
-systemctl restart openvpn@server_tcp
-systemctl restart openvpn@server_tcp1
-systemctl restart openvpn@server_udp
-systemctl restart openvpn@server_udp1
 
 # Removing Duplicate privoxy config
 rm -rf /etc/privoxy/config*
